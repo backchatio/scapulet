@@ -10,6 +10,8 @@ import xml.{Node, NodeSeq}
 
 object Scapulet {
 
+  val XMPP_STANZAS_NS = "urn:ietf:params:xml:ns:xmpp-stanzas"
+
   object JID {
     def apply(bareJid: String, resource: String) = "%s/%s".format(bareJid, resource)
 
