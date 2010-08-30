@@ -17,9 +17,6 @@ trait ScapuletHandler { this: Actor =>
     self.supervisor foreach { _ ! UnregisterHandler(self)}
   }
 
-  protected def reply(msg: Seq[Node]) = self.supervisor foreach { _ ! Send(msg) }
-
-
   protected def replyWith(msg: => Seq[Node]) = {
     self.supervisor foreach { _ ! Send(msg) }
   }
