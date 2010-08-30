@@ -2,9 +2,8 @@ package com.mojolly.scapulet
 
 import se.scalablesolutions.akka.actor.Actor
 import se.scalablesolutions.akka.config.ScalaConfig._
-import com.mojolly.scapulet.Scapulet.{UnregisterHandler, RegisterHandler}
-import com.mojolly.scapulet.ComponentConnection.Messages._
 import xml.NodeSeq
+import com.mojolly.scapulet.Scapulet.{Send, UnregisterHandler, RegisterHandler}
 
 trait ScapuletHandler { this: Actor =>
 
@@ -22,8 +21,6 @@ trait ScapuletHandler { this: Actor =>
 
   protected def handleStanza: Receive
 
-//  private def handleComponentMessage: Receive = {}
-
-  protected def receive = handleStanza //orElse handleComponentMessage
+  protected def receive = handleStanza 
 
 }

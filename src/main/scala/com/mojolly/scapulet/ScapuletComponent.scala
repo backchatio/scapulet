@@ -1,12 +1,11 @@
 package com.mojolly.scapulet
 
 import java.util.concurrent.ConcurrentSkipListSet
-import se.scalablesolutions.akka.actor.{ActorRef, Actor}
 import collection.JavaConversions._
 import com.mojolly.scapulet.Scapulet._
 import com.mojolly.scapulet.ComponentConnection.FaultTolerantComponentConnection
-import com.mojolly.scapulet.ComponentConnection.Messages._
-import xml.NodeSeq
+import se.scalablesolutions.akka.actor.{ActorRef, Actor}
+import se.scalablesolutions.akka.actor.Actor._
 
 class ScapuletComponent(connection: FaultTolerantComponentConnection, handlers: ConcurrentSkipListSet[ActorRef], callback: Option[ActorRef]) extends Actor {
 
@@ -14,7 +13,6 @@ class ScapuletComponent(connection: FaultTolerantComponentConnection, handlers: 
   def this(connection: FaultTolerantComponentConnection) = this(connection, new ConcurrentSkipListSet[ActorRef], None)
 
   connection.xmlProcessor = self
-  private var _sendCallback: Option[NodeSeq => Unit] = None
 
   override def postRestart(cause: Throwable) = {
     connection.xmlProcessor = self
@@ -47,9 +45,10 @@ class ScapuletComponent(connection: FaultTolerantComponentConnection, handlers: 
     case Connect => {
       connection.connect
     }
-    case RegisterSendCallback(callback) => _sendCallback = Option(callback)
-    case UnregisterSendCallback(_) => _sendCallback = None
-    case Send(xml) => _sendCallback foreach { _(xml) }
+    case Disconnect => {
+      shutdown
+    }
+    case Send(xml) => connection.write(xml)
   }
 
   protected def dispatchToHandlers: Receive = {
@@ -67,8 +66,11 @@ class ScapuletComponent(connection: FaultTolerantComponentConnection, handlers: 
   override def isDefinedAt(msg: Any) = (handlers exists { _ isDefinedAt msg }) || manageHandlers.isDefinedAt(msg)
 }
 object ScapuletComponent {
-
-  def apply(connection: FaultTolerantComponentConnection, handlers: ConcurrentSkipListSet[ActorRef] = new ConcurrentSkipListSet[ActorRef], callback: Option[ActorRef] = None) =
-    new ScapuletComponent(connection, handlers, callback)
-
+  
+  def apply(connectionConfig: ConnectionConfig, supervisor: ActorRef = Scapulet.supervisor): ActorRef = {
+    val conn = new FaultTolerantComponentConnection(connectionConfig)
+    val comp = actorOf(new ScapuletComponent(conn))
+    supervisor startLink comp
+    comp
+  }
 }

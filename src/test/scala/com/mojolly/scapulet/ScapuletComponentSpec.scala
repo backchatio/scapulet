@@ -24,7 +24,7 @@ object ScapuletComponentSpec extends Specification with Mockito with JUnit with 
       val callback = actor {
         case RegisteredHandler(_) => latch.open
       }
-      val processor = actorOf(ScapuletComponent(conn, handlers, Some(callback))).start
+      val processor = actorOf(new ScapuletComponent(conn, handlers, Some(callback))).start
       val handler = actor { case "a message" =>  }
       processor ! RegisterHandler(handler)
       latch.await
@@ -43,7 +43,7 @@ object ScapuletComponentSpec extends Specification with Mockito with JUnit with 
         }
         case UnregisteredHandler(_) => latch.countDown
       }
-      val processor = actorOf(ScapuletComponent(conn, handlers, Some(callback))).start
+      val processor = actorOf(new ScapuletComponent(conn, handlers, Some(callback))).start
       val handler = actor { case "a message" => }
       processor ! RegisterHandler(handler)
       registerLatch.await
@@ -56,7 +56,7 @@ object ScapuletComponentSpec extends Specification with Mockito with JUnit with 
       val latch = new CountDownLatch(1)
       val handler = actor { case "a message" => latch.countDown }
       val handlers = new ConcurrentSkipListSet[ActorRef]((handler :: Nil).toList)
-      val processor = actorOf(ScapuletComponent(conn, handlers)).start
+      val processor = actorOf(new ScapuletComponent(conn, handlers, None)).start
       processor ! "a message"
       latch.await(2, TimeUnit.SECONDS)
       latch.getCount must_== 0
@@ -67,7 +67,7 @@ object ScapuletComponentSpec extends Specification with Mockito with JUnit with 
         case "a message" =>
       }
       val handlers = new ConcurrentSkipListSet[ActorRef]((handler :: Nil).toList)
-      val processor = actorOf(ScapuletComponent(conn, handlers)).start
+      val processor = actorOf(new ScapuletComponent(conn, handlers, None)).start
       processor.isDefinedAt("a message") must be(true)
     }
 
@@ -76,7 +76,7 @@ object ScapuletComponentSpec extends Specification with Mockito with JUnit with 
         case "a message" =>
       }
       val handlers = new ConcurrentSkipListSet[ActorRef]((handler :: Nil).toList)
-      val processor = actorOf(ScapuletComponent(conn, handlers)).start
+      val processor = actorOf(new ScapuletComponent(conn, handlers, None)).start
       processor.isDefinedAt("the message") must be(false)
     }
   }

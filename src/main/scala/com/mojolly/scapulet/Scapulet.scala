@@ -4,18 +4,9 @@ import se.scalablesolutions.akka.actor.{Actor, ActorRef}
 import se.scalablesolutions.akka.actor.Actor._
 import se.scalablesolutions.akka.config.OneForOneStrategy
 import com.mojolly.scapulet.ComponentConnection.FaultTolerantComponentConnection
-import com.mojolly.scapulet.ComponentConnection.Messages._
 import se.scalablesolutions.akka.util.Duration
 import java.util.concurrent.TimeUnit
-import xml.NodeSeq
-
-/**
- * Created by IntelliJ IDEA.
- * User: ivan
- * Date: Aug 16, 2010
- * Time: 10:27:29 PM
- * 
- */
+import xml.{Node, NodeSeq}
 
 object Scapulet {
 
@@ -36,24 +27,30 @@ object Scapulet {
       connectionTimeout: Duration = Duration(10, TimeUnit.SECONDS),
       reconnectDelay: Duration = Duration(5, TimeUnit.SECONDS),
       connectionCallback: Option[ActorRef] = None) extends NotNull {
-
-
-
     def domain = virtualHost getOrElse host
     def address = "%s.%s".format(userName, domain)
     def asHexSecret(id: String) = StringUtil.hash(id + password)
   }
-  case class ComponentConfig(xmlProcessor: ActorRef) extends NotNull
+//  case class ComponentConfig(connectionConfig: ConnectionConfig, ) extends NotNull
 
 
   sealed trait ScapuletMessage
-  case class RegisterHandler(module: ActorRef)
-  case class RegisteredHandler(module: ActorRef)
-  case class UnregisterHandler(module: ActorRef)
-  case class UnregisteredHandler(module: ActorRef)
-  case class RegisterSendCallback(callback: NodeSeq => Unit)
-  case class UnregisterSendCallback(callback: NodeSeq => Unit)
-  case class SendFailed(stanza: NodeSeq)
+  case class RegisterHandler(module: ActorRef) extends ScapuletMessage
+  case class RegisteredHandler(module: ActorRef) extends ScapuletMessage
+  case class UnregisterHandler(module: ActorRef) extends ScapuletMessage
+  case class UnregisteredHandler(module: ActorRef) extends ScapuletMessage
+
+  sealed trait ComponentConnectionMessage
+  case object Connect extends ComponentConnectionMessage
+  case object Connected extends ComponentConnectionMessage
+  case object Reconnecting extends ComponentConnectionMessage
+  case object Disconnected extends ComponentConnectionMessage
+  case object Disconnect extends ComponentConnectionMessage
+  case class Failure(cause: Throwable) extends ComponentConnectionMessage
+  case class ConnectionShutdown(cause: Throwable) extends ComponentConnectionMessage
+  case class Send(xml: Seq[Node]) extends ComponentConnectionMessage
+  case class SendFailed(stanza: NodeSeq) extends ComponentConnectionMessage
+  case class Sent(xml: NodeSeq) extends ComponentConnectionMessage
 
   def makeComponentConnection(connectionConfig: ConnectionConfig) = {
     val conn = new FaultTolerantComponentConnection(connectionConfig)
@@ -62,12 +59,6 @@ object Scapulet {
     comp
   }
 
-//
-//  def newConnection(connectionConfig: ConnectionConfig) = {
-//    val conn = new FaultTolerantComponentConnection(connectionConfig)
-//    conn.connect
-//    conn
-//  }
 
   class ScapuletSupervisor extends Actor {
     import self._
@@ -79,7 +70,7 @@ object Scapulet {
     }
   }
 
-  private val supervisor = actorOf[ScapuletSupervisor].start
+  private[scapulet] val supervisor = actorOf[ScapuletSupervisor].start
 
   def shutdownAll = supervisor.shutdownLinkedActors
 

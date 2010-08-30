@@ -8,41 +8,14 @@ import org.jboss.netty.bootstrap.ClientBootstrap
 import org.jboss.netty.channel._
 import group.DefaultChannelGroup
 import org.jboss.netty.handler.codec.string.{StringEncoder, StringDecoder}
-import se.scalablesolutions.akka.config.ScalaConfig._
-import se.scalablesolutions.akka.config.OneForOneStrategy
 import com.mojolly.scapulet.Exceptions.UnauthorizedException
-import org.jboss.netty.handler.timeout.ReadTimeoutHandler
 import org.jboss.netty.util.{Timeout, TimerTask, HashedWheelTimer, Timer}
-import se.scalablesolutions.akka.actor.{ActorRegistry, Exit, Actor, ActorRef}
-import com.mojolly.scapulet.Scapulet.{RegisterSendCallback, ConnectionConfig}
-import xml.parsing.{NoBindingFactoryAdapter, FactoryAdapter}
-import org.xml.sax.InputSource
-import javax.xml.parsers.{SAXParserFactory, SAXParser}
+import se.scalablesolutions.akka.actor.{ActorRegistry, ActorRef}
 import xml._
-
-/**
- * Created by IntelliJ IDEA.
- * User: ivan
- * Date: Aug 16, 2010
- * Time: 10:04:01 PM
- * 
- */
+import com.mojolly.scapulet.Scapulet._
 
 object ComponentConnection {
 
-  object Messages {
-    sealed trait ComponentConnectionMessage
-    case object Connect extends ComponentConnectionMessage
-    case object Connected extends ComponentConnectionMessage
-    case object Reconnecting extends ComponentConnectionMessage
-    case object Disconnected extends ComponentConnectionMessage
-    case class Failure(cause: Throwable) extends ComponentConnectionMessage
-    case class ConnectionShutdown(cause: Throwable) extends ComponentConnectionMessage
-    case class Send(xml: Seq[Node]) extends ComponentConnectionMessage
-
-
-  }
-  import Messages._
 
   private[scapulet] object XMPPStrings {
     val NS_ACCEPT = "jabber:component:accept"
@@ -78,22 +51,6 @@ object ComponentConnection {
     }
   }
 
-//  class PermissiveXmlParserFactoryAdapter extends NoBindingFactoryAdapter with Logging {
-//
-//    override def parser = try {
-//        val f = SAXParserFactory.newInstance
-//        f.setNamespaceAware(false)
-//        f.newSAXParser
-//      } catch {
-//        case e => {
-//          log.error(e, "Unable to create SAX parser")
-//          throw e
-//        }
-//      }
-//
-//  }
-  
-
   class FaultTolerantComponentConnection(connectionConfig: ConnectionConfig) extends Logging {
     import connectionConfig._
 
@@ -128,15 +85,11 @@ object ComponentConnection {
     bootstrap.setOption("tcpNoDelay", true)
     bootstrap.setOption("keepAlive", true)
 
-//    protected def receive = {
-//      case Connect => connect
-//      case ConnectionShutdown(cause) => {
-//        log.error(cause, "There has been an error in the xmpp connection [%s] to [%s:%d]".format(address, host, port))
-//        self ! Exit(self, cause)
-//      }
-//    }
     val conn = this
 
+    def write(xml: NodeSeq) {
+      openHandlers.write(xml.toString)
+    }
     private[scapulet] def connection_=(newConnection: ChannelFuture) = _connection = newConnection
     private[scapulet] def connection = _connection
     def connect: Unit = synchronized {
@@ -153,12 +106,6 @@ object ComponentConnection {
         }
         if(!_connection.isSuccess) {
           log.error(_connection.getCause, "XMPP connection has failed, trying to reconnect in %s seconds.".format(reconnectDelay.toSeconds))
-//            reconnectionTimer.newTimeout(new TimerTask {
-//            override def run(timeout: Timeout) = {
-//              notifyCallback(Reconnecting)
-//              connect
-//            }
-//          }, reconnectDelay.length, reconnectDelay.unit)
         }
         isConnected = true
       }
@@ -180,20 +127,6 @@ object ComponentConnection {
       }
     }
 
-//    override def shutdown = {
-//      reconnectionTimer.cancel
-//      self.shutdownLinkedActors
-//      disconnect
-//    }
-//
-//    override def preRestart(cause:Throwable) = {
-//      disconnect
-//    }
-//
-//    override def postRestart(cause: Throwable) = {
-//      notifyCallback(Reconnecting)
-//      self ! Connect
-//    }
   }
 
   @ChannelHandler.Sharable
@@ -250,7 +183,6 @@ object ComponentConnection {
           case s => XML.loadString(s) match {
             case <handshake /> => {
               log info "Established connection to [%s:%d]".format(config.host, config.port)
-              xmlProcessor foreach { _ ! RegisterSendCallback(nodes => e.getChannel.write(nodes.toString))}
               connection.notifyCallback(Connected)
             }
             case x: NodeSeq => xmlProcessor.foreach(a => a ! x )
@@ -271,9 +203,3 @@ object ComponentConnection {
     }
   }
 }
-//class ComponentConnection(connectionConfig: ConnectionConfig) extends Actor {
-//  import connectionConfig._
-//
-//
-//
-//}
