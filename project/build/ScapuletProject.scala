@@ -14,6 +14,7 @@ class ScapuletProject(info: ProjectInfo) extends DefaultProject(info) with CodeF
 
   override def compileOrder = CompileOrder.JavaThenScala
 
+  override def managedStyle = ManagedStyle.Maven
   val publishTo = if(version.toString.endsWith("-SNAPSHOT"))
       ("Mojolly Snapshots" at "http://maven/content/repositories/snapshots/")
     else ("Mojolly Releases" at "http://maven/content/repositories/releases/")

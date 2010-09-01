@@ -10,7 +10,7 @@ trait ScapuletHandler { this: Actor =>
   self.lifeCycle = Some(LifeCycle(Permanent))
 
   override def init = {
-    self.supervisor foreach { _ ! RegisterHandler(self) }
+   self.supervisor foreach { _ ! RegisterHandler(self) } 
   }
 
   override def shutdown = {
@@ -18,7 +18,12 @@ trait ScapuletHandler { this: Actor =>
   }
 
   protected def replyWith(msg: => Seq[Node]) = {
-    self.supervisor foreach { _ ! Send(msg) }
+    val m: Seq[Node] = msg
+    if(!m.isEmpty) {
+      log debug "Replying with:"
+      log debug m.map(_.toString).mkString("\n")
+      self.supervisor foreach { _ ! Send(m) }
+    }
   }
 
   protected def safeReplyWith(from: String, to: String, include: Option[Elem] = None)( msg: => Seq[Node]) = {
@@ -26,7 +31,10 @@ trait ScapuletHandler { this: Actor =>
       try {
         msg
       } catch {
-        case e => internalServerError(from, to, include)
+        case e => {
+          log.error(e, "There was an error when generating the reply for [%s] from [%s]", from, to)
+          internalServerError(from, to, include)
+        }
       }
     }
   }

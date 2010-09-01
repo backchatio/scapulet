@@ -10,6 +10,9 @@ The main motivation for writing this was that all libraries I used so far only w
 don't work with all jabber clients etc. Most of them also insist on writing their own xml parser where IMO that's not
 the place where most of the time is spent.
 
+An example of the intended usage can be found in this gist: http://gist.github.com/557204
+
+
 == Note on Patches/Pull Requests
  
 * Fork the project.
