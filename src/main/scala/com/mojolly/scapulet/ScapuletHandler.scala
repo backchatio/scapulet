@@ -9,9 +9,9 @@ trait ScapuletHandler { this: Actor =>
 
   self.lifeCycle = Some(LifeCycle(Permanent))
 
-  override def init = {
-   self.supervisor foreach { _ ! RegisterHandler(self) } 
-  }
+//  override def init = {
+//   self.supervisor foreach { _ ! RegisterHandler(self) }
+//  }
 
   override def shutdown = {
     self.supervisor foreach { _ ! UnregisterHandler(self)}
