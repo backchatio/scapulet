@@ -28,7 +28,8 @@ object Scapulet {
       virtualHost: Option[String] = None,
       connectionTimeout: Duration = Duration(10, TimeUnit.SECONDS),
       reconnectDelay: Duration = Duration(5, TimeUnit.SECONDS),
-      connectionCallback: Option[ActorRef] = None) extends NotNull {
+      connectionCallback: Option[ActorRef] = None,
+      maxThreads: Int = 25) extends NotNull {
     def domain = virtualHost getOrElse host
     def address = "%s.%s".format(userName, domain)
     def asHexSecret(id: String) = StringUtil.hash(id + password)

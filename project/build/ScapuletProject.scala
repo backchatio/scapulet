@@ -72,6 +72,7 @@ class ScapuletProject(info: ProjectInfo) extends DefaultProject(info) with CodeF
   // akka core dependency by default
   val akkaCore   = akkaModule("core") //withSources
   val netty = "org.jboss.netty" % "netty" % "3.2.1.Final" withSources
+  val idn = "org.gnu.inet" % "libidn" % "1.15"
   
   val scalaTime  ="org.scala-tools" %% "time" % "0.2-SNAPSHOT"
   val scalaTest  = "org.scalatest" % "scalatest" % SCALATEST_VERSION % "test"

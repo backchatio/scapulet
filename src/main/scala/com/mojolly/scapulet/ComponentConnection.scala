@@ -1,18 +1,22 @@
 package com.mojolly.scapulet
 
-import java.net.InetSocketAddress
 import se.scalablesolutions.akka.util.Logging
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory
-import java.util.concurrent.Executors
 import org.jboss.netty.bootstrap.ClientBootstrap
 import org.jboss.netty.channel._
-import group.DefaultChannelGroup
+import group.{ChannelGroupFuture, ChannelGroupFutureListener, DefaultChannelGroup}
 import org.jboss.netty.handler.codec.string.{StringEncoder, StringDecoder}
 import com.mojolly.scapulet.Exceptions.UnauthorizedException
 import org.jboss.netty.util.{Timeout, TimerTask, HashedWheelTimer, Timer}
 import se.scalablesolutions.akka.actor.{ActorRegistry, ActorRef}
 import xml._
 import com.mojolly.scapulet.Scapulet._
+import java.net.{Socket, InetSocketAddress}
+import java.io._
+import java.util.concurrent.{ThreadPoolExecutor, TimeUnit, LinkedBlockingQueue, Executors}
+import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy
+import org.jboss.netty.buffer.ChannelBuffers
+import StringUtil.Utf8
 
 object ComponentConnection {
 
@@ -51,6 +55,50 @@ object ComponentConnection {
     }
   }
 
+  class SocketConnection(connectionConfig: ConnectionConfig) extends Thread with Logging {
+    import connectionConfig._
+    import concurrent.ops._
+
+    private var _out: Writer = _
+    private var _in: InputStream = _
+    private var _connection: Socket = _
+
+    val serverAddress = new InetSocketAddress(host, port)
+    def address = connectionConfig.address
+    def hexCredentials(id: String) = asHexSecret(id)
+
+
+    def connect = {
+      _connection = new Socket
+      _connection.connect(serverAddress, connectionTimeout.toMillis.toInt)
+      _out = new BufferedWriter(new OutputStreamWriter(_connection.getOutputStream, StringUtil.Utf8))
+      _in = _connection.getInputStream
+
+    }
+
+
+    def write(nodes: Seq[Node]) = {
+      _out write nodes.map(xml.Utility.trimProper _).toString
+      _out.flush
+    }
+
+
+    def disconnect = {
+      ActorRegistry.shutdownAll
+      // Log but swallow all errors while closing the connection
+      try {
+        _connection.close
+      } catch {
+        case e => log.error(e, "An error occurred while closing the connection")
+      }
+
+      log info "XMPP component [%s] disconnected from host [%s:%d].".format(address, host, port)
+      _connection = null
+    }
+
+
+  }
+
   class FaultTolerantComponentConnection(connectionConfig: ConnectionConfig) extends Logging {
     import connectionConfig._
 
@@ -78,8 +126,7 @@ object ComponentConnection {
     bootstrap.setPipelineFactory(new ChannelPipelineFactory {
       def getPipeline = Channels.pipeline(
         new StringDecoder(StringUtil.Utf8),
-        new AuthenticateHandler(bootstrap, reconnectionTimer, connectionConfig, _xmlProcessorOption, conn),
-        new StringEncoder(StringUtil.Utf8))
+        new AuthenticateHandler(bootstrap, reconnectionTimer, connectionConfig, _xmlProcessorOption, conn))
     })
     bootstrap.setOption("connectTimeoutMillis", connectionTimeout.toMillis)
     bootstrap.setOption("tcpNoDelay", true)
@@ -87,8 +134,19 @@ object ComponentConnection {
 
     val conn = this
 
-    def write(xml: NodeSeq) {
-      openHandlers.write(xml.toString)
+    def write(nodes: NodeSeq) {
+      //TODO: Fix UTF-8 decoding
+      val txt = nodes.map(Utility.trimProper _).toString
+      val buff = ChannelBuffers.copiedBuffer(txt, Utf8)
+      val writeFuture = openHandlers.write(buff)
+      writeFuture.addListener(new ChannelGroupFutureListener{
+        def operationComplete(fut: ChannelGroupFuture) = {
+          if(!fut.isCompleteSuccess) {
+            log error "Failed to send: %s".format(nodes)
+          }
+        }
+      })
+      //writeFuture.awaitUninterruptibly(3, TimeUnit.SECONDS)
     }
     private[scapulet] def connection_=(newConnection: ChannelFuture) = _connection = newConnection
     private[scapulet] def connection = _connection
@@ -140,7 +198,7 @@ object ComponentConnection {
     override def channelConnected(ctx: ChannelHandlerContext, e: ChannelStateEvent) {
       if(e.getState == ChannelState.CONNECTED) {
         log info ("Connected to server, authenticating...")
-        val buff = makeStreamMessage(connection.address)
+        val buff = ChannelBuffers.copiedBuffer(makeStreamMessage(connection.address), Utf8)
         e.getChannel.write(buff)
 
       }
@@ -178,7 +236,7 @@ object ComponentConnection {
             throw new UnauthorizedException(error)
           }
           case StreamResponse(id, from) => {
-            ch.write(<handshake>{connection.hexCredentials(id)}</handshake>.toString)
+            ch.write(ChannelBuffers.copiedBuffer(<handshake>{connection.hexCredentials(id)}</handshake>.toString, Utf8))
           }
           case s => XML.loadString(s) match {
             case <handshake /> => {
@@ -198,7 +256,7 @@ object ComponentConnection {
     }
 
     override def exceptionCaught(ctx: ChannelHandlerContext, e: ExceptionEvent) {
-      println(e.getCause, "There was a problem in the XMPP Channel Handler")
+      log.error(e.getCause, "There was a problem in the XMPP Channel Handler")
       e.getChannel.close
     }
   }

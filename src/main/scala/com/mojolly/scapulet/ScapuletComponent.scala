@@ -63,7 +63,9 @@ class ScapuletComponent(connection: FaultTolerantComponentConnection, handlers: 
   private def senderDefined_? = self.senderFuture.isDefined || self.sender.isDefined
 
   override def receive = manageConnection orElse dispatchToHandlers orElse manageHandlers
-  override def isDefinedAt(msg: Any) = (handlers exists { _ isDefinedAt msg }) || manageHandlers.isDefinedAt(msg)
+  override def isDefinedAt(msg: Any) = (manageConnection.isDefinedAt(msg) ||
+      (handlers exists { _ isDefinedAt msg }) ||
+      manageHandlers.isDefinedAt(msg))
 }
 object ScapuletComponent {
   
