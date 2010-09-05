@@ -48,6 +48,7 @@ object Scapulet {
   case object Connected extends ComponentConnectionMessage
   case object Reconnecting extends ComponentConnectionMessage
   case object Disconnected extends ComponentConnectionMessage
+  case object Disconnecting extends ComponentConnectionMessage
   case object Disconnect extends ComponentConnectionMessage
   case class Failure(cause: Throwable) extends ComponentConnectionMessage
   case class ConnectionShutdown(cause: Throwable) extends ComponentConnectionMessage
@@ -59,7 +60,7 @@ object Scapulet {
     val conn = new FaultTolerantComponentConnection(connectionConfig)
     val comp = actorOf(new ScapuletComponent(conn))
     supervisor startLink comp
-    comp
+    (comp, conn)
   }
 
 

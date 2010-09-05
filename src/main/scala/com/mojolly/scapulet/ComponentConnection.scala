@@ -5,7 +5,7 @@ import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory
 import org.jboss.netty.bootstrap.ClientBootstrap
 import org.jboss.netty.channel._
 import group.{ChannelGroupFuture, ChannelGroupFutureListener, DefaultChannelGroup}
-import org.jboss.netty.handler.codec.string.{StringEncoder, StringDecoder}
+import org.jboss.netty.handler.codec.string.{StringDecoder}
 import com.mojolly.scapulet.Exceptions.UnauthorizedException
 import org.jboss.netty.util.{Timeout, TimerTask, HashedWheelTimer, Timer}
 import se.scalablesolutions.akka.actor.{ActorRegistry, ActorRef}
@@ -13,10 +13,9 @@ import xml._
 import com.mojolly.scapulet.Scapulet._
 import java.net.{Socket, InetSocketAddress}
 import java.io._
-import java.util.concurrent.{ThreadPoolExecutor, TimeUnit, LinkedBlockingQueue, Executors}
-import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy
 import org.jboss.netty.buffer.ChannelBuffers
-import StringUtil.Utf8
+import StringUtil.{Utf8, hash}
+import java.util.concurrent.{TimeUnit, Executors}
 
 object ComponentConnection {
 
@@ -62,6 +61,12 @@ object ComponentConnection {
     private var _out: Writer = _
     private var _in: InputStream = _
     private var _connection: Socket = _
+    private var _shutdown = false
+
+    private var _xmlProcessorOption: Option[ActorRef] = None
+
+    def xmlProcessor = _xmlProcessorOption
+    def xmlProcessor_=(processor: ActorRef) = _xmlProcessorOption = Option(processor)
 
     val serverAddress = new InetSocketAddress(host, port)
     def address = connectionConfig.address
@@ -71,8 +76,15 @@ object ComponentConnection {
     def connect = {
       _connection = new Socket
       _connection.connect(serverAddress, connectionTimeout.toMillis.toInt)
-      _out = new BufferedWriter(new OutputStreamWriter(_connection.getOutputStream, StringUtil.Utf8))
+      _out = new BufferedWriter(new OutputStreamWriter(_connection.getOutputStream, Utf8))
       _in = _connection.getInputStream
+      spawn {
+        while (!_shutdown) {
+          val reader = new XMPPStreamReader(_in)
+          val stanza = reader.read
+          _xmlProcessorOption foreach { _ ! stanza } 
+        }
+      }
 
     }
 
@@ -84,7 +96,8 @@ object ComponentConnection {
 
 
     def disconnect = {
-      ActorRegistry.shutdownAll
+      _shutdown = true
+      
       // Log but swallow all errors while closing the connection
       try {
         _connection.close
@@ -112,7 +125,7 @@ object ComponentConnection {
 
     val reconnectionTimer = new HashedWheelTimer
 
-    def hexCredentials(id: String) = StringUtil.hash(id + password)
+    def hexCredentials(id: String) = hash(id + password)
 
     private var isConnected = false
     private val channelFactory = new NioClientSocketChannelFactory(Executors.newCachedThreadPool, Executors.newCachedThreadPool)
@@ -125,7 +138,7 @@ object ComponentConnection {
 
     bootstrap.setPipelineFactory(new ChannelPipelineFactory {
       def getPipeline = Channels.pipeline(
-        new StringDecoder(StringUtil.Utf8),
+        new StringDecoder(Utf8),
         new AuthenticateHandler(bootstrap, reconnectionTimer, connectionConfig, _xmlProcessorOption, conn))
     })
     bootstrap.setOption("connectTimeoutMillis", connectionTimeout.toMillis)
@@ -134,8 +147,22 @@ object ComponentConnection {
 
     val conn = this
 
+    def sayGoodbye(nodes: NodeSeq)(callback: () => Unit) = {
+      val txt = nodes.map(Utility.trimProper _).toString
+      log debug "Saying goodbye to:\n%s".format(txt)
+      val buff = ChannelBuffers.copiedBuffer(txt, Utf8)
+      val writeFuture = openHandlers.write(buff)
+      writeFuture.addListener(new ChannelGroupFutureListener{
+        def operationComplete(fut: ChannelGroupFuture) = {
+          if(fut.isDone) {
+            disconnect
+            callback()
+          }
+        }
+      })
+      writeFuture.awaitUninterruptibly(5, TimeUnit.SECONDS)
+    }
     def write(nodes: NodeSeq) {
-      //TODO: Fix UTF-8 decoding
       val txt = nodes.map(Utility.trimProper _).toString
       val buff = ChannelBuffers.copiedBuffer(txt, Utf8)
       val writeFuture = openHandlers.write(buff)
@@ -179,12 +206,24 @@ object ComponentConnection {
         openHandlers.disconnect
         openHandlers.close.awaitUninterruptibly
         bootstrap.releaseExternalResources
-        ActorRegistry.shutdownAll
         log info "XMPP component [%s] disconnected from host [%s:%d].".format(address, host, port)
         _connection = null
       }
     }
 
+  }
+
+  class StanzaDecoder extends SimpleChannelHandler with Logging {
+
+    override def writeRequested(ctx: ChannelHandlerContext, e: MessageEvent): Unit = {
+      val nodes = e.getMessage
+      val txt = nodes match {
+        case msg: Node => msg.map(Utility.trimProper _).toString
+        case msg: String => msg
+      }
+      val buff = ChannelBuffers.copiedBuffer(txt, Utf8)
+      Channels.write(ctx, e.getFuture, buff)
+    }
   }
 
   @ChannelHandler.Sharable
@@ -225,6 +264,18 @@ object ComponentConnection {
       }
     }
 
+    private def loadXml(source: String) = {
+      try {
+        List(XML.loadString(source))
+      } catch {
+        case e: SAXParseException => {
+          val doc = XML.loadString("<wrapper>%s</wrapper>".format(source))
+          doc.child.toList
+        }        
+      }
+
+    }
+
     override def messageReceived(ctx: ChannelHandlerContext, e: MessageEvent) {
       try {
         val ch = e.getChannel
@@ -238,13 +289,15 @@ object ComponentConnection {
           case StreamResponse(id, from) => {
             ch.write(ChannelBuffers.copiedBuffer(<handshake>{connection.hexCredentials(id)}</handshake>.toString, Utf8))
           }
-          case s => XML.loadString(s) match {
-            case <handshake /> => {
-              log info "Established connection to [%s:%d]".format(config.host, config.port)
-              connection.notifyCallback(Connected)
-            }
-            case x: NodeSeq => xmlProcessor.foreach(a => a ! x )
-            case _ =>  //componentConfig.xmlProcessor foreach { _ ! x }
+          case s => {
+            loadXml(s) foreach { x => x match {
+              case <handshake /> => {
+                log info "Established connection to [%s:%d]".format(config.host, config.port)
+                connection.notifyCallback(Connected)
+              }
+              case x: Node => xmlProcessor.foreach(a => a ! Utility.trim(x) )
+              case _ =>  //componentConfig.xmlProcessor foreach { _ ! x }
+            } }
           }
         }
       } catch {
