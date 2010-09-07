@@ -38,9 +38,11 @@ object StringUtil extends Logging {
     case e => throw e
   }
 
-  def hexEncode(bytes: Array[Byte]) = (bytes.foldLeft(new StringBuilder(bytes.length * 2)) { (sb, b) =>
+  def hexEncode(bytes: Array[Byte]) =  ((new StringBuilder(bytes.length * 2) /: bytes) { (sb, b) =>
     if((b.toInt & 0xff) < 0x10) sb.append("0")
     sb.append(Integer.toString(b.toInt & 0xff, 16))
   }).toString
+
+  
 
 }

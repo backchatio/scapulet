@@ -33,7 +33,7 @@ class ScapuletComponent(val connection: FaultTolerantComponentConnection, handle
       ((h !! Disconnecting).as[Seq[Node]] getOrElse Seq[Node]()) ++ n
     }
     log debug "The nodes:\n%s".format(nodes)
-    connection.sayGoodbye(nodes) {
+    connection.sayGoodbye(nodes) { 
       handlers foreach { _.stop }
       handlers.clear
       self.sender foreach { _ ! Disconnected }

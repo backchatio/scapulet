@@ -5,7 +5,7 @@ import de.tuxed.codefellow.plugin.CodeFellowPlugin
 
 class ScapuletProject(info: ProjectInfo) extends DefaultProject(info) with CodeFellowPlugin with IdeaProject {
 
-  val AKKA_VERSION = "0.10"
+  val AKKA_VERSION = "0.11-SNAPSHOT"
   val ATMO_VERSION = "0.6.1"
   val LIFT_VERSION = "2.1-M1"
   val GRIZZLY_VERSION = "1.9.18-m"
@@ -38,7 +38,7 @@ class ScapuletProject(info: ProjectInfo) extends DefaultProject(info) with CodeF
   lazy val voldemortModuleConfig        = ModuleConfiguration("voldemort.store.compress", AkkaRepository)
   lazy val scalaTimeModuleConfig        = ModuleConfiguration("org.scala-tools", "time_2.8.0", ThirdPartySnapshots)
   lazy val vscaladocModuleConfig        = ModuleConfiguration("org.scala-tools", "vscaladoc", AkkaRepository)
-  lazy val akkaModuleConfig             = ModuleConfiguration("se.scalablesolutions.akka", AkkaRepository)
+  lazy val akkaModuleConfig             = ModuleConfiguration("se.scalablesolutions.akka", ThirdPartySnapshots)
   lazy val sbinaryModuleConfig          = ModuleConfiguration("sbinary", AkkaRepository)
   lazy val sjsonModuleConfig            = ModuleConfiguration("sjson.json", AkkaRepository)
   lazy val configgyModuleConfig         = ModuleConfiguration("net.lag", "configgy", AkkaRepository)
@@ -70,8 +70,8 @@ class ScapuletProject(info: ProjectInfo) extends DefaultProject(info) with CodeF
   def akkaModule(module: String) = "se.scalablesolutions.akka" %% ("akka-" + module) % akkaVersion
 
   // akka core dependency by default
-  val akkaCore   = akkaModule("core") //withSources
-  val netty = "org.jboss.netty" % "netty" % "3.2.1.Final" withSources
+  val akkaCore   = akkaModule("actor") //withSources
+  val netty = "org.jboss.netty" % "netty" % "3.2.2.Final" withSources
   val idn = "org.gnu.inet" % "libidn" % "1.15"
   
   val scalaTime  ="org.scala-tools" %% "time" % "0.2-SNAPSHOT"

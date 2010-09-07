@@ -147,7 +147,7 @@ object ComponentConnection {
 
     val conn = this
 
-    def sayGoodbye(nodes: NodeSeq)(callback: () => Unit) = {
+    def sayGoodbye(nodes: NodeSeq)(callback: => Unit) = {
       val txt = nodes.map(Utility.trimProper _).toString
       log debug "Saying goodbye to:\n%s".format(txt)
       val buff = ChannelBuffers.copiedBuffer(txt, Utf8)
@@ -156,7 +156,7 @@ object ComponentConnection {
         def operationComplete(fut: ChannelGroupFuture) = {
           if(fut.isDone) {
             disconnect
-            callback()
+            callback
           }
         }
       })
