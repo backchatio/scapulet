@@ -4,14 +4,7 @@ import se.scalablesolutions.akka.util.Logging
 import java.security.{NoSuchAlgorithmException, MessageDigest}
 import java.io.UnsupportedEncodingException
 import java.nio.charset.Charset
-
-/**
- * Created by IntelliJ IDEA.
- * User: ivan
- * Date: Aug 17, 2010
- * Time: 1:16:27 PM
- * 
- */
+import org.apache.commons.codec.binary.Hex
 
 object StringUtil extends Logging {
   val UTF_8 = "UTF-8"
@@ -30,6 +23,7 @@ object StringUtil extends Logging {
   def hash(data: String) = try {
     digest.update(data.getBytes(UTF_8))
     hexEncode(digest.digest)
+    //Hex.encodeHexString(digest.digest)
   } catch {
     case e: UnsupportedEncodingException => {
       log error "Failed to use the UTF-8 encoding. Scapulet will be unable to function properly."

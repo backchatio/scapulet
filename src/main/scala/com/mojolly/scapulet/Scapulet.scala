@@ -2,7 +2,7 @@ package com.mojolly.scapulet
 
 import se.scalablesolutions.akka.actor.{Actor, ActorRef}
 import se.scalablesolutions.akka.actor.Actor._
-import se.scalablesolutions.akka.config.OneForOneStrategy
+import se.scalablesolutions.akka.config.Supervision.OneForOneStrategy
 import com.mojolly.scapulet.ComponentConnection.FaultTolerantComponentConnection
 import se.scalablesolutions.akka.util.Duration
 import java.util.concurrent.TimeUnit
@@ -20,6 +20,7 @@ object Scapulet {
       Some((parts.head, parts.lastOption))
     } else Some((jid, None))
   }
+
   case class ConnectionConfig(
       userName: String,
       password: String,
@@ -32,7 +33,7 @@ object Scapulet {
       maxThreads: Int = 25) extends NotNull {
     def domain = virtualHost getOrElse host
     def address = "%s.%s".format(userName, domain)
-    def asHexSecret(id: String) = StringUtil.hash(id + password)
+    def asHexSecret(id: String) = StringUtil.hash("%s%s".format(id, password))
   }
 //  case class ComponentConfig(connectionConfig: ConnectionConfig, ) extends NotNull
 
@@ -66,8 +67,7 @@ object Scapulet {
 
   class ScapuletSupervisor extends Actor {
     import self._
-    faultHandler = Some(OneForOneStrategy(5, 5000))
-    trapExit = List(classOf[Throwable])
+    faultHandler = OneForOneStrategy(List(classOf[Throwable]), 5, 5000)
 
     def receive = {
       case _ => {}

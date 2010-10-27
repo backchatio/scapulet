@@ -5,9 +5,9 @@ import de.tuxed.codefellow.plugin.CodeFellowPlugin
 
 class ScapuletProject(info: ProjectInfo) extends DefaultProject(info) with CodeFellowPlugin with IdeaProject {
 
-  val AKKA_VERSION = "0.11-SNAPSHOT"
-  val ATMO_VERSION = "0.6.1"
-  val LIFT_VERSION = "2.1-M1"
+  val AKKA_VERSION = "0.16-SNAPSHOT"
+  val ATMO_VERSION = "0.7-SNAPSHOT"
+  val LIFT_VERSION = "2.1"
   val GRIZZLY_VERSION = "1.9.18-m"
   val SCALATEST_VERSION = "1.2-for-scala-2.8.0.final-SNAPSHOT"
 
@@ -28,19 +28,29 @@ class ScapuletProject(info: ProjectInfo) extends DefaultProject(info) with CodeF
     lazy val SonatypeOssReleases     = MavenRepository("Mojolly sonatype oss releases", "http://oss.sonatype.org/content/repositories/releases/")
     lazy val CodehausRepo            = MavenRepository("Mojolly Codehaus Snapshots", "http://repository.codehaus.org")
     lazy val GuiceyFruitRepo         = MavenRepository("Mojolly GuiceyFruit Releases", "http://guiceyfruit.googlecode.com/svn/repo/releases/")
-    lazy val JBossRepo               = MavenRepository("Mojolly JBoss releases", "https://repository.jboss.org/nexus/content/groups/public/")
+    lazy val JBossRepo               = MavenRepository("Mojolly JBoss releases", "http://maven/content/repositories/jboss/")
     lazy val SunJDMKRepo             = MavenRepository("Mojolly JDMK Releases", "http://wp5.e-taxonomy.eu/cdmlib/mavenrepo/")
     lazy val AkkaRepository          = MavenRepository("AkkaRepository", "http://www.scalablesolutions.se/akka/repository")
+    lazy val MojollyReleases        = MavenRepository("Mojolly Releases", "http://maven/content/repositories/releases")
+    lazy val MojollySnapshots       = MavenRepository("Mojolly Snapshots", "http://maven/content/repositories/snapshots")
+    lazy val CasbahRepoReleases     = MavenRepository("Casbah Release Repo", "http://maven/content/repositories/bumnetworks/")
+    lazy val ZookeeperRepo          = MavenRepository("Zookeeper Repo", "http://maven/content/repositories/zookeeper-releases/")
+    lazy val ClojarsRepo            = MavenRepository("Clojars Repo", "http://maven/content/repositories/clojar-releases/")
+    lazy val ThirdParty             = MavenRepository("Third Party Repo", "http://maven/content/repositories/thirdparty")
+    lazy val CasbahSnapshotRepo     = MavenRepository("Casbah Snapshots", "http://maven/content/repositories/bumnetworks-snapshots/")
+    lazy val ScalateSnapshots       = MavenRepository("Scalate Snapshots", "http://maven/content/repositories/scalate-snapshots/")
 	}
 
   import Repositories._
+  override def repositories = Set("Mojolly Maven Central" at "http://maven/content/repositories/central/")
 
+  lazy val uuidModuleConfig             = ModuleConfiguration("com.eaio", ThirdParty)
   lazy val voldemortModuleConfig        = ModuleConfiguration("voldemort.store.compress", AkkaRepository)
   lazy val scalaTimeModuleConfig        = ModuleConfiguration("org.scala-tools", "time_2.8.0", ThirdPartySnapshots)
   lazy val vscaladocModuleConfig        = ModuleConfiguration("org.scala-tools", "vscaladoc", AkkaRepository)
   lazy val akkaModuleConfig             = ModuleConfiguration("se.scalablesolutions.akka", ThirdPartySnapshots)
   lazy val sbinaryModuleConfig          = ModuleConfiguration("sbinary", AkkaRepository)
-  lazy val sjsonModuleConfig            = ModuleConfiguration("sjson.json", AkkaRepository)
+  lazy val sjsonModuleConfig            = ModuleConfiguration("sjson.json", ThirdParty)
   lazy val configgyModuleConfig         = ModuleConfiguration("net.lag", "configgy", AkkaRepository)
   lazy val aspectWerkzModuleConfig      = ModuleConfiguration("org.codehaus.aspectwerkz", AkkaRepository)
   lazy val jsr166xModuleConfig          = ModuleConfiguration("jsr166x", AkkaRepository)
@@ -70,7 +80,7 @@ class ScapuletProject(info: ProjectInfo) extends DefaultProject(info) with CodeF
   def akkaModule(module: String) = "se.scalablesolutions.akka" %% ("akka-" + module) % akkaVersion
 
   // akka core dependency by default
-  val akkaCore   = akkaModule("actor") //withSources
+  val akkaCore   = akkaModule("remote") //withSources
   val netty = "org.jboss.netty" % "netty" % "3.2.2.Final" withSources
   val idn = "org.gnu.inet" % "libidn" % "1.15"
   

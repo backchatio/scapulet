@@ -4,16 +4,15 @@ import collection.JavaConversions._
 import com.mojolly.scapulet.Scapulet._
 import com.mojolly.scapulet.ComponentConnection.FaultTolerantComponentConnection
 import se.scalablesolutions.akka.actor.Actor._
-import se.scalablesolutions.akka.config.ScalaConfig._
-import se.scalablesolutions.akka.config.OneForOneStrategy
+import se.scalablesolutions.akka.config._
+import se.scalablesolutions.akka.config.Supervision._
 import se.scalablesolutions.akka.actor.{Scheduler, ActorRef, Actor}
 import java.util.concurrent.{TimeUnit, ConcurrentSkipListSet}
 import xml.Node
 
 class ScapuletComponent(val connection: FaultTolerantComponentConnection, handlers: ConcurrentSkipListSet[ActorRef], callback: Option[ActorRef]) extends Actor {
-  self.faultHandler = Some(OneForOneStrategy(5, 5000))
-  self.trapExit = List(classOf[Throwable])
-  self.lifeCycle = Some(LifeCycle(Permanent))
+  self.faultHandler = OneForOneStrategy(List(classOf[Throwable]), 5, 5000)
+  self.lifeCycle = Permanent
 
   def this(connection: FaultTolerantComponentConnection) = this(connection, new ConcurrentSkipListSet[ActorRef], None)
 

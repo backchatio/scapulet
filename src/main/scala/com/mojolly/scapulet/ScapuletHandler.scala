@@ -1,21 +1,13 @@
 package com.mojolly.scapulet
 
-import se.scalablesolutions.akka.config.ScalaConfig._
+import se.scalablesolutions.akka.config.Supervision._
 import com.mojolly.scapulet.Scapulet._
 import se.scalablesolutions.akka.actor.{ActorRegistry, Actor}
 import xml.{NodeSeq, Elem, Node}
 
 trait ScapuletHandler { this: Actor =>
 
-  self.lifeCycle = Some(LifeCycle(Permanent))
-
-//  override def init = {
-//   self.supervisor foreach { _ ! RegisterHandler(self) }
-//  }
-
-//  override def shutdown = {
-//    self.supervisor foreach { _ ! UnregisterHandler(self)}
-//  }
+  self.lifeCycle = Permanent
 
   protected def replyWith(msg: => Seq[Node]) = {
     val m: Seq[Node] = msg

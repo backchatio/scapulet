@@ -125,7 +125,10 @@ object ComponentConnection {
 
     val reconnectionTimer = new HashedWheelTimer
 
-    def hexCredentials(id: String) = hash(id + password)
+    def hexCredentials(id: String) = {
+      log info "Hashing %s with password %s to %s".format(id, password, StringUtil.hash(id + password)) 
+      StringUtil.hash("%s%s".format(id, password))
+    }
 
     private var isConnected = false
     private val channelFactory = new NioClientSocketChannelFactory(Executors.newCachedThreadPool, Executors.newCachedThreadPool)
@@ -287,6 +290,7 @@ object ComponentConnection {
             throw new UnauthorizedException(error)
           }
           case StreamResponse(id, from) => {
+            log info "Signing in to message with id: [%s] from [%s]".format(id, from)
             ch.write(ChannelBuffers.copiedBuffer(<handshake>{connection.hexCredentials(id)}</handshake>.toString, Utf8))
           }
           case s => {
