@@ -10,17 +10,6 @@ import xml.{Node, NodeSeq}
 
 object Scapulet {
 
-  val XMPP_STANZAS_NS = "urn:ietf:params:xml:ns:xmpp-stanzas"
-
-  object JID {
-    def apply(bareJid: String, resource: String) = "%s/%s".format(bareJid, resource)
-
-    def unapply(jid: String) = if(jid.contains("/")) {
-      val parts = jid.split("/")
-      Some((parts.head, parts.lastOption))
-    } else Some((jid, None))
-  }
-
   case class ConnectionConfig(
       userName: String,
       password: String,

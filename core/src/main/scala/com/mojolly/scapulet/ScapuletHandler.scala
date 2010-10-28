@@ -1,7 +1,8 @@
 package com.mojolly.scapulet
 
 import se.scalablesolutions.akka.config.Supervision._
-import com.mojolly.scapulet.Scapulet._
+import Scapulet._
+import XMPPConstants._
 import se.scalablesolutions.akka.actor.{ActorRegistry, Actor}
 import xml.{NodeSeq, Elem, Node}
 
