@@ -2,17 +2,15 @@ package com.mojolly.scapulet
 
 import com.mojolly.scapulet._
 
-import org.specs._
-import org.specs.mock.Mockito
-import runner.{ScalaTest, JUnit}
 import scala.io.Source
 import scala.xml._
 import pull._
 import se.scalablesolutions.akka.util.Logging
 import java.io.ByteArrayInputStream
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 
-object XMPPStreamReaderSpec extends Specification with Mockito with JUnit with ScalaTest {
-  detailedDiffs
+class XMPPStreamReaderSpec extends WordSpec with MustMatchers {
 
   val sample = <message>
       <body>
@@ -56,9 +54,10 @@ object XMPPStreamReaderSpec extends Specification with Mockito with JUnit with S
       val rdr = new XMPPStreamReader(new ByteArrayInputStream(sample.toString.getBytes("UTF-8")))
       val res = rdr.read
 
-      (res \ "body").text must_== (sample \ "body").text
-      (res \ "html" \ "body").text must_== (sample \ "html" \ "body").text
-      (res \ "html" \ "body") must \("ol", "type" -> "1", "start" -> "4")
+      (res \ "body").text must equal ((sample \ "body").text)
+      (res \ "html" \ "body").text must equal ((sample \ "html" \ "body").text)
+      (res \ "html" \ "body" \ "ol" \ "@type").text must equal ((sample \ "html" \ "body" \ "ol" \ "@type").text)
+      (res \ "html" \ "body" \ "ol" \ "@start").text must equal ((sample \ "html" \ "body" \ "ol" \ "@start").text)
     }
   }
 

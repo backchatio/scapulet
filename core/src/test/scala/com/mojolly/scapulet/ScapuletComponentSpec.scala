@@ -2,9 +2,6 @@ package com.mojolly.scapulet
 
 import com.mojolly.scapulet._
 
-import org.specs._
-import org.specs.mock.Mockito
-import runner.{ScalaTest, JUnit}
 import se.scalablesolutions.akka.actor.Actor
 import se.scalablesolutions.akka.actor.Actor._
 import se.scalablesolutions.akka.actor.ActorRef
@@ -13,12 +10,15 @@ import org.multiverse.api.latches.StandardLatch
 import java.util.concurrent.{TimeUnit, CountDownLatch, ConcurrentSkipListSet}
 import com.mojolly.scapulet.Scapulet._
 import com.mojolly.scapulet.ComponentConnection.FaultTolerantComponentConnection
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
+import org.scalatest.mock.MockitoSugar
 
-object ScapuletComponentSpec extends Specification with Mockito with JUnit with ScalaTest {
+class ScapuletComponentSpec extends WordSpec with MustMatchers with MockitoSugar {
 
   "The processor" should {
 
-    val conn = smartMock[FaultTolerantComponentConnection]
+    val conn = mock[FaultTolerantComponentConnection]
     "register handlers" in {
       val handlers = new ConcurrentSkipListSet[ActorRef]
       val latch = new StandardLatch
@@ -27,8 +27,8 @@ object ScapuletComponentSpec extends Specification with Mockito with JUnit with 
       val handler = actorOf(new Actor { def receive = { case "a message" =>  } }).start
       processor ! RegisterHandler(handler)
       latch.await
-      handlers.isEmpty must be(false)
-      handlers.contains(handler) must be(true)
+      handlers.isEmpty must equal(false)
+      handlers.contains(handler) must equal(true)
     }
 
     "unregister handlers" in {
@@ -48,7 +48,7 @@ object ScapuletComponentSpec extends Specification with Mockito with JUnit with 
       registerLatch.await
       processor ! UnregisterHandler(handler)
       latch.await
-      handlers.contains(handler) must be(false)
+      handlers.contains(handler) must equal(false)
     }
 
     "respond to messages defined in the handlers" in {
@@ -58,21 +58,21 @@ object ScapuletComponentSpec extends Specification with Mockito with JUnit with 
       val processor = actorOf(new ScapuletComponent(conn, handlers, None)).start
       processor ! "a message"
       latch.await(2, TimeUnit.SECONDS)
-      latch.getCount must_== 0
+      latch.getCount must be (0)
     }
     
     "indicate it can respond to messages defined in the handlers" in {
       val handler = actorOf(new Actor { def receive = { case "a message" =>  } }).start
       val handlers = new ConcurrentSkipListSet[ActorRef]((handler :: Nil).toList)
       val processor = actorOf(new ScapuletComponent(conn, handlers, None)).start
-      processor.isDefinedAt("a message") must be(true)
+      processor.isDefinedAt("a message") must equal(true)
     }
 
     "indicate it can't respond to messages defined in the handlers" in {
       val handler = actorOf(new Actor { def receive = { case "a message" =>  } }).start
       val handlers = new ConcurrentSkipListSet[ActorRef]((handler :: Nil).toList)
       val processor = actorOf(new ScapuletComponent(conn, handlers, None)).start
-      processor.isDefinedAt("the message") must be(false)
+      processor.isDefinedAt("the message") must equal(false)
     }
   }
 

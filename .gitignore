@@ -56,3 +56,4 @@ jrebel.lic
 *.iws
 
 target
+.idea

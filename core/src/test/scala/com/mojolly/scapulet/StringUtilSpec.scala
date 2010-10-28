@@ -1,37 +1,25 @@
 package com.mojolly.scapulet
 
-/**
- * Created by IntelliJ IDEA.
- * User: ivan
- * Date: Aug 17, 2010
- * Time: 1:32:53 PM
- * 
- 
- */
-
 import com.mojolly.scapulet._
 import Scapulet._
+import org.scalatest.matchers.MustMatchers
+import org.scalatest.WordSpec
 
 
-import org.specs._
-import org.specs.mock.Mockito
-import runner.{ScalaTest, JUnit}
+class StringUtilSpec extends WordSpec with MustMatchers {
 
-object StringUtilSpec extends Specification with Mockito with JUnit with ScalaTest {
-  detailedDiffs
-
-  "The StringUtil" should {
+  "The StringUtil" when {
     "must hash a given string as hex" in {
-      StringUtil.hash("the string") must be_==("e8cc75db52457e014d354b54a2c44c30dd96cbd5")
+      StringUtil.hash("the string") must equal("e8cc75db52457e014d354b54a2c44c30dd96cbd5")
     }
 
-    "must get the resource and barejid from a jid" in {
+    "must get the resource and barejid from a jid" should {
       "the resource must be Some(value) when there is a resource" in {
         "someone@somewhere.com/theclient" match {
           case JID(bareJid, resource) => {
-            bareJid must_== "someone@somewhere.com"
-            resource must notBeEmpty
-            resource must_== Some("theclient")
+            bareJid must equal( "someone@somewhere.com")
+            resource must not be ('empty)
+            resource must equal( Some("theclient"))
           }
           case _ => fail("Didn't parse the JID")
 
@@ -41,8 +29,8 @@ object StringUtilSpec extends Specification with Mockito with JUnit with ScalaTe
       "the resource must be None when there is no resource" in {
         "someone@somewhere.com" match {
           case JID(bareJid, resource) => {
-            bareJid must_== "someone@somewhere.com"
-            resource must beEmpty
+            bareJid must equal( "someone@somewhere.com")
+            resource must be ('empty)
           }
           case _ => fail("Didn't parse the JID")
 
