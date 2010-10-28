@@ -40,6 +40,10 @@ project/plugins/target
 project/plugins/src_managed
 project/plugins/project
 
+core/lib_managed
+core/target
+pubsub/lib_managed
+pubsub/target
 
 # eclipse specific
 .metadata

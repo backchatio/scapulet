@@ -1,18 +1,17 @@
 import java.util.jar.Attributes
 import java.util.jar.Attributes.Name._
 import sbt._
-import de.tuxed.codefellow.plugin.CodeFellowPlugin
 
-class ScapuletProject(info: ProjectInfo) extends DefaultProject(info) with CodeFellowPlugin with IdeaProject {
+class ScapuletProject(info: ProjectInfo) extends DefaultProject(info) {
 
   val AKKA_VERSION = "0.16-SNAPSHOT"
   val ATMO_VERSION = "0.7-SNAPSHOT"
   val LIFT_VERSION = "2.1"
-  val GRIZZLY_VERSION = "1.9.18-m"
-  val SCALATEST_VERSION = "1.2-for-scala-2.8.0.final-SNAPSHOT"
+  val SCALATEST_VERSION = "1.2"
 
 
   override def compileOrder = CompileOrder.JavaThenScala
+  override def parallelExecution = true
 
   override def managedStyle = ManagedStyle.Maven
   val publishTo = if(version.toString.endsWith("-SNAPSHOT"))
@@ -68,30 +67,35 @@ class ScapuletProject(info: ProjectInfo) extends DefaultProject(info) with CodeF
   lazy val multiverseModuleConfig       = ModuleConfiguration("org.multiverse", CodehausRepo)
   lazy val nettyModuleConfig            = ModuleConfiguration("org.jboss.netty", JBossRepo)
   lazy val redisModuleConfig            = ModuleConfiguration("com.redis", AkkaRepository)
-  lazy val scalaTestModuleConfig        = ModuleConfiguration("org.scalatest", ScalaToolsSnapshots)
+  lazy val scalaTestModuleConfig        = ModuleConfiguration("org.scalatest", ScalaToolsReleases)
   lazy val testInterfaceModuleConfig    = ModuleConfiguration("org.scala-tools.testing", "test-interface", ScalaToolsReleases)
-  lazy val specsModuleConfig            = ModuleConfiguration("org.scala-tools.testing", "specs_2.8.0", ScalaToolsReleases)
   lazy val scalacheckModuleConfig       = ModuleConfiguration("org.scala-tools.testing", "scalacheck_2.8.0", ScalaToolsSnapshots)
   lazy val embeddedRepo                 = EmbeddedRepo
 
   val akkaVersion = AKKA_VERSION
 
+  lazy val scap_core   = project("core", "scapulet-core", new ScapuletCoreProject(_))
+  lazy val scap_pubsub = project("pubsub", "scapulet-pubsub", new ScapuletPubSubProject(_), scap_core)
+
   // convenience method
   def akkaModule(module: String) = "se.scalablesolutions.akka" %% ("akka-" + module) % akkaVersion
+  override def deliverProjectDependencies = Nil
 
-  // akka core dependency by default
-  val akkaCore   = akkaModule("remote") //withSources
-  val netty = "org.jboss.netty" % "netty" % "3.2.2.Final" withSources
-  val idn = "org.gnu.inet" % "libidn" % "1.15"
+  class ScapuletCoreProject(info: ProjectInfo) extends DefaultProject(info) with ScapuletSubProject {
+
+    val description = "The core Scapulet library essentials for connecting to servers"
   
-  val scalaTime  ="org.scala-tools" %% "time" % "0.2-SNAPSHOT"
-  val scalaTest  = "org.scalatest" % "scalatest" % SCALATEST_VERSION % "test"
-  val scalaSpecs = "org.scala-tools.testing" %% "specs" % "1.6.5"  % "test"
-  val scalaCheck = "org.scala-tools.testing" %% "scalacheck" % "1.8-SNAPSHOT"  % "test"
-  val junit      = "junit" % "junit" % "4.5" % "test"
-  val mockito    = "org.mockito" % "mockito-all" % "1.8.4" % "test"
+    // akka core dependency by default
+    val akkaCore   = akkaModule("remote") //withSources
+    val idn = "org.gnu.inet" % "libidn" % "1.15"
+    val scalaTime  ="org.scala-tools" %% "time" % "0.2-SNAPSHOT"
 
+  }
 
+  class ScapuletPubSubProject(info: ProjectInfo) extends DefaultProject(info) with ScapuletSubProject {
+
+    def description = "Contains the stanza implementations etc for creating pubsub components and bots"
+  
     def allArtifacts = {
       Path.fromFile(buildScalaInstance.libraryJar) +++
       (removeDupEntries(runClasspath filter ClasspathUtilities.isArchive)) +++
@@ -103,30 +107,102 @@ class ScapuletProject(info: ProjectInfo) extends DefaultProject(info) with CodeF
       manifestClassPath.map(cp => ManifestAttributes(
         (Attributes.Name.CLASS_PATH, cp),
         (IMPLEMENTATION_TITLE, "Scapulet XMPP Component connection"),
-        (IMPLEMENTATION_URL, "http://github.com/casualjim/scapulet"),
+        (IMPLEMENTATION_URL, "http://github.com/mojolly/scapulet"),
         (IMPLEMENTATION_VENDOR, "Mojolly Ltd.")
       )).toList
 
-  def removeDupEntries(paths: PathFinder) =
-   Path.lazyPathFinder {
-     val mapped = paths.get map { p => (p.relativePath, p) }
-     (Map() ++ mapped).values.toList
-   }
+    def removeDupEntries(paths: PathFinder) =
+     Path.lazyPathFinder {
+       val mapped = paths.get map { p => (p.relativePath, p) }
+       (Map() ++ mapped).values.toList
+     }
+
+  }
+
+  trait ScapuletSubProject extends BasicScalaProject with BasicPackagePaths { self: BasicScalaProject => 
+
+    def description: String
+    
+    val scalaTest  = "org.scalatest" % "scalatest" % SCALATEST_VERSION % "test"
+    val scalaCheck = "org.scala-tools.testing" %% "scalacheck" % "1.8-SNAPSHOT"  % "test"
+    val junit      = "junit" % "junit" % "4.5" % "test"
+    val mockito    = "org.mockito" % "mockito-all" % "1.8.5" % "test"
+
+
+    override def javaCompileOptions = JavaCompileOption("-Xlint:unchecked") :: super.javaCompileOptions.toList
+    override def compileOrder = CompileOrder.JavaThenScala
+
+    override def pomExtra = (
+      <parent>
+        <groupId>{organization}</groupId>
+        <artifactId>{ScapuletProject.this.artifactID}</artifactId>
+        <version>{version}</version>
+      </parent>
+      <name>{name}</name>
+      <description>{description}</description>)
+    
+
+    override def packageDocsJar = defaultJarPath("-javadoc.jar")
+    override def packageSrcJar= defaultJarPath("-sources.jar")
+
+    // If these aren't lazy, then the build crashes looking for
+    // ${moduleName}/project/build.properties.
+    lazy val sourceArtifact = Artifact.sources(artifactID)
+    lazy val docsArtifact = Artifact.javadoc(artifactID)
+    override def packageToPublishActions = super.packageToPublishActions ++ Seq(packageDocs, packageSrc)
+
+    override def compileOptions = Unchecked :: Deprecation :: (super.compileOptions ++
+      Seq("-Xmigration",
+        "-Xcheckinit",
+        "-encoding", "utf8")
+        .map(x => CompileOption(x))).toList
+
+  }
+
+  trait UnpublishedProject extends BasicManagedProject {
+    override def publishLocalAction = task { None }
+    override def deliverLocalAction = task { None }
+    override def publishAction = task { None }
+    override def deliverAction = task { None }
+    override def artifacts = Set.empty    
+  }
 
   override def pomExtra =
+    <name>{name}</name>
+    <description>Scapulet Project POM</description>
     <inceptionYear>2010</inceptionYear>
-    <url>http://github.com/casualjim/scapulet</url>
+    <url>http://github.com/mojolly/scapulet</url>
     <organization>
       <name>Mojolly</name>
-      <url>http://backchat.im</url>
+      <url>http://mojolly.com</url>
     </organization>
     <licenses>
       <license>
-        <name>Apache 2</name>
-        <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        <name>BSD</name>
+        <url>http://github.com/mojolly/scapulet/raw/HEAD/LICENSE</url>
         <distribution>repo</distribution>
       </license>
     </licenses>
+    <mailingLists>
+      <mailingList>
+        <name>Scapulet user group</name>
+        <archive>http://groups.google.com/group/scapulet-user</archive>
+        <post>scapulet-user@googlegroups.com</post>
+        <subscribe>scapulet-user+subscribe@googlegroups.com</subscribe>
+        <unsubscribe>scapulet-user+unsubscribe@googlegroups.com</unsubscribe>
+      </mailingList>
+    </mailingLists>
+    <scm>
+      <connection>scm:git:git://github.com/mojolly/scapulet.git</connection>
+      <url>http://github.com/mojolly/scapulet</url>
+    </scm>
+    <developers>
+      <developer>
+        <id>casualjim</id>
+        <name>Ivan Porto Carrero</name>
+        <url>http://flanders.co.nz/</url>
+      </developer>
+    </developers>
 }
 
 // vim: set si ts=2 sw=2 sts=2 et:
