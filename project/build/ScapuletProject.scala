@@ -89,6 +89,7 @@ class ScapuletProject(info: ProjectInfo) extends DefaultProject(info) with de.tu
     val akkaCore   = akkaModule("remote") //withSources
     val idn = "org.gnu.inet" % "libidn" % "1.15"
     val scalaTime  ="org.scala-tools" %% "time" % "0.2-SNAPSHOT"
+    val commonsLang = "commons-lang" % "commons-lang" % "2.5"
 
   }
 
