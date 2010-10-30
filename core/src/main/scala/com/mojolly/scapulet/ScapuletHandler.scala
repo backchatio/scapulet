@@ -1,9 +1,9 @@
 package com.mojolly.scapulet
 
-import se.scalablesolutions.akka.config.Supervision._
+import akka.config.Supervision._
 import Scapulet._
 import XMPPConstants._
-import se.scalablesolutions.akka.actor.{ActorRegistry, Actor}
+import akka.actor.{ActorRegistry, Actor}
 import xml.{NodeSeq, Elem, Node}
 
 trait ScapuletHandler { this: Actor =>

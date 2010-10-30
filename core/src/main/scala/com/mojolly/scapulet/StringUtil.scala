@@ -1,6 +1,6 @@
 package com.mojolly.scapulet
 
-import se.scalablesolutions.akka.util.Logging
+import akka.util.Logging
 import java.security.{NoSuchAlgorithmException, MessageDigest}
 import java.io.UnsupportedEncodingException
 import java.nio.charset.Charset

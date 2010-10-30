@@ -2,9 +2,9 @@ package com.mojolly.scapulet
 
 import com.mojolly.scapulet._
 
-import se.scalablesolutions.akka.actor.Actor
-import se.scalablesolutions.akka.actor.Actor._
-import se.scalablesolutions.akka.actor.ActorRef
+import akka.actor.Actor
+import akka.actor.Actor._
+import akka.actor.ActorRef
 import scala.collection.JavaConversions._
 import org.multiverse.api.latches.StandardLatch
 import java.util.concurrent.{TimeUnit, CountDownLatch, ConcurrentSkipListSet}

@@ -1,10 +1,10 @@
 package com.mojolly.scapulet
 
-import se.scalablesolutions.akka.actor.{Actor, ActorRef}
-import se.scalablesolutions.akka.actor.Actor._
-import se.scalablesolutions.akka.config.Supervision.OneForOneStrategy
+import akka.actor.{Actor, ActorRef}
+import akka.actor.Actor._
+import akka.config.Supervision.OneForOneStrategy
 import com.mojolly.scapulet.ComponentConnection.FaultTolerantComponentConnection
-import se.scalablesolutions.akka.util.Duration
+import akka.util.Duration
 import java.util.concurrent.TimeUnit
 import xml.{Node, NodeSeq}
 

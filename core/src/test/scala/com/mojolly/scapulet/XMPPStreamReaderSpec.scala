@@ -5,7 +5,7 @@ import com.mojolly.scapulet._
 import scala.io.Source
 import scala.xml._
 import pull._
-import se.scalablesolutions.akka.util.Logging
+import akka.util.Logging
 import java.io.ByteArrayInputStream
 import org.scalatest.WordSpec
 import org.scalatest.matchers.MustMatchers

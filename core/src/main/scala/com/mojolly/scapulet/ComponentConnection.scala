@@ -1,6 +1,6 @@
 package com.mojolly.scapulet
 
-import se.scalablesolutions.akka.util.Logging
+import akka.util.Logging
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory
 import org.jboss.netty.bootstrap.ClientBootstrap
 import org.jboss.netty.channel._
@@ -8,7 +8,7 @@ import group.{ChannelGroupFuture, ChannelGroupFutureListener, DefaultChannelGrou
 import org.jboss.netty.handler.codec.string.{StringDecoder}
 import com.mojolly.scapulet.Exceptions.UnauthorizedException
 import org.jboss.netty.util.{Timeout, TimerTask, HashedWheelTimer, Timer}
-import se.scalablesolutions.akka.actor.{ActorRegistry, ActorRef}
+import akka.actor.{ActorRegistry, ActorRef}
 import xml._
 import com.mojolly.scapulet.Scapulet._
 import java.net.{Socket, InetSocketAddress}

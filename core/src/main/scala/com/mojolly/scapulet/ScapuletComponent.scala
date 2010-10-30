@@ -3,10 +3,10 @@ package com.mojolly.scapulet
 import collection.JavaConversions._
 import com.mojolly.scapulet.Scapulet._
 import com.mojolly.scapulet.ComponentConnection.FaultTolerantComponentConnection
-import se.scalablesolutions.akka.actor.Actor._
-import se.scalablesolutions.akka.config._
-import se.scalablesolutions.akka.config.Supervision._
-import se.scalablesolutions.akka.actor.{Scheduler, ActorRef, Actor}
+import akka.actor.Actor._
+import akka.config._
+import akka.config.Supervision._
+import akka.actor.{Scheduler, ActorRef, Actor}
 import java.util.concurrent.{TimeUnit, ConcurrentSkipListSet}
 import xml.Node
 

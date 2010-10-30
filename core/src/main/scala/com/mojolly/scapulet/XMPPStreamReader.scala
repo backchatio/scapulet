@@ -3,7 +3,7 @@ package com.mojolly.scapulet
 import xml._
 import xml.pull._
 import io.Source
-import se.scalablesolutions.akka.util.Logging
+import akka.util.Logging
 import java.io.InputStream
 import StringUtil.UTF_8
 

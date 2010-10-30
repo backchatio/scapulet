@@ -2,9 +2,9 @@ import java.util.jar.Attributes
 import java.util.jar.Attributes.Name._
 import sbt._
 
-class ScapuletProject(info: ProjectInfo) extends DefaultProject(info) {
+class ScapuletProject(info: ProjectInfo) extends DefaultProject(info) with de.tuxed.codefellow.plugin.CodeFellowPlugin {
 
-  val AKKA_VERSION = "0.16-SNAPSHOT"
+  val AKKA_VERSION = "0.17-SNAPSHOT"
   val ATMO_VERSION = "0.7-SNAPSHOT"
   val LIFT_VERSION = "2.1"
   val SCALATEST_VERSION = "1.2"
@@ -47,7 +47,7 @@ class ScapuletProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val voldemortModuleConfig        = ModuleConfiguration("voldemort.store.compress", AkkaRepository)
   lazy val scalaTimeModuleConfig        = ModuleConfiguration("org.scala-tools", "time_2.8.0", ThirdPartySnapshots)
   lazy val vscaladocModuleConfig        = ModuleConfiguration("org.scala-tools", "vscaladoc", AkkaRepository)
-  lazy val akkaModuleConfig             = ModuleConfiguration("se.scalablesolutions.akka", ThirdPartySnapshots)
+  lazy val akkaModuleConfig             = ModuleConfiguration("akka", ThirdPartySnapshots)
   lazy val sbinaryModuleConfig          = ModuleConfiguration("sbinary", AkkaRepository)
   lazy val sjsonModuleConfig            = ModuleConfiguration("sjson.json", ThirdParty)
   lazy val configgyModuleConfig         = ModuleConfiguration("net.lag", "configgy", AkkaRepository)
@@ -78,7 +78,7 @@ class ScapuletProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val scap_pubsub = project("pubsub", "scapulet-pubsub", new ScapuletPubSubProject(_), scap_core)
 
   // convenience method
-  def akkaModule(module: String) = "se.scalablesolutions.akka" %% ("akka-" + module) % akkaVersion
+  def akkaModule(module: String) = "akka" %% ("akka-" + module) % akkaVersion
   override def deliverProjectDependencies = Nil
 
   class ScapuletCoreProject(info: ProjectInfo) extends DefaultProject(info) with ScapuletSubProject {
@@ -119,7 +119,7 @@ class ScapuletProject(info: ProjectInfo) extends DefaultProject(info) {
 
   }
 
-  trait ScapuletSubProject extends BasicScalaProject with BasicPackagePaths { self: BasicScalaProject => 
+  trait ScapuletSubProject extends BasicScalaProject with BasicPackagePaths with de.tuxed.codefellow.plugin.CodeFellowPlugin { self: BasicScalaProject => 
 
     def description: String
     
