@@ -7,11 +7,9 @@ object DiscoInfoQuery {
 
   val sl = <query xmlns={DISCO_INFO_NS} />
 
-  def apply[TNode <: NodeSeq](id: String, from: String, to: String)(content: Seq[TNode]): NodeSeq = {
+  def apply[TNode <: NodeSeq](id: String, from: String, to: String): NodeSeq = {
     <iq type="get" id={id} to={to} from={from}>
-      <query xmlns={DISCO_INFO_NS}>
-        { content }
-      </query>
+      <query xmlns={DISCO_INFO_NS} />
     </iq>
   }
 

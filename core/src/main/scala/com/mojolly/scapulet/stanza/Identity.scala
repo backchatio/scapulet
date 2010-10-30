@@ -10,4 +10,12 @@ object Identity {
       case _ => <identity category={category} type={`type`} />
     }
   }
+
+  def unapply(elem: Node) = elem match {
+    case identity @ Elem(_, "identity", _, _, _*) => {
+      val name = identity.attributes("name").headOption flatMap { a => Option(a.text) }
+      Some(((identity \ "@category").text, (identity \ "@type").text, name))
+    }
+    case _ => None
+  }
 }
