@@ -67,4 +67,16 @@ object Scapulet {
 
   def shutdownAll = supervisor.shutdownLinkedActors
 
+  def systemInfo : String = {
+    "%s-%s-%s, %s-%s %s".format(
+        System.getProperty("os.name"),
+        System.getProperty("os.arch"),
+        System.getProperty("os.version"),
+        System.getProperty("java.vm.name"),
+        System.getProperty("java.version"),
+        System.getProperty("java.vm.vendor")
+      )
+  }
+
+
 }

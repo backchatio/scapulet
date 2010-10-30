@@ -38,7 +38,7 @@ object ComponentConnection {
     def unapply(msg: String) = streamRegex.findFirstMatchIn(msg) match {
       case Some(start) =>
         val x = XML.loadString(start + "</stream:stream>")
-        Some((x \ "@id").text, (x \ "@from").text)        
+        Some(((x \ "@id").text, (x \ "@from").text))  
       case _ => None
     }
   }
@@ -126,7 +126,6 @@ object ComponentConnection {
     val reconnectionTimer = new HashedWheelTimer
 
     def hexCredentials(id: String) = {
-      log info "Hashing %s with password %s to %s".format(id, password, StringUtil.hash(id + password)) 
       StringUtil.hash("%s%s".format(id, password))
     }
 

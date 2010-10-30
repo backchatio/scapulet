@@ -10,8 +10,12 @@ The main motivation for writing this was that all libraries I used so far only w
 don't work with all jabber clients etc. Most of them also insist on writing their own xml parser where IMO that's not
 the place where most of the time is spent.
 
-An example of the intended usage can be found in this gist: http://gist.github.com/557204
+I've used this library to create a MUC component which we needed and now I need to create a pubsub component so I'm finding 
+which things need to be shared and those are being put in this library. 
+Currently I'm implementing XEP-0060
 
+There is a google group for your questions: http://groups.google.com/group/scapulet-user
+There is also an irc channel: irc://irc.freenode.net/scapulet
 
 == Note on Patches/Pull Requests
  
