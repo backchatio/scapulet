@@ -17,6 +17,10 @@ Currently I'm implementing XEP-0060
 There is a google group for your questions: http://groups.google.com/group/scapulet-user
 There is also an irc channel: irc://irc.freenode.net/scapulet
 
+implemented:
+XEP 0114: component connections
+XEP 0030: Service discovery (partial)
+
 == Note on Patches/Pull Requests
  
 * Fork the project.

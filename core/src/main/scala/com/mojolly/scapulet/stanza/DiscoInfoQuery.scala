@@ -9,7 +9,7 @@ object DiscoInfoQuery {
 
   def apply[TNode <: NodeSeq](id: String, from: String, to: String): NodeSeq = {
     <iq type="get" id={id} to={to} from={from}>
-      <query xmlns={DISCO_INFO_NS} />
+      {sl}
     </iq>
   }
 
