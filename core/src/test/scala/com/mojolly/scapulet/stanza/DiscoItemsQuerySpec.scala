@@ -46,13 +46,15 @@ class DiscoItemsQuerySpec extends WordSpec with MustMatchers {
       "throw an exception when no recipient is defined" in {
         evaluating { DiscoItemsQuery("2345", "someone", " ")(Nil) } must produce [Exception]
       }
-//      "return a xml stanza when the request is valid" in {
-//        DiscoItemsQuery("3456", "someone", "somebody").map(Utility.trimProper _) must equal (
-//          (<iq type="get" id="3456" to="somebody" from="someone">
-//            <query xmlns="http://jabber.org/protocol/disco#items" />
-//          </iq>).map(Utility.trimProper _)
-//        )
-//      }
+      "return a xml stanza when the request is valid" in {
+        (DiscoItemsQuery("3456", "someone", "somebody") { DiscoItem("somebody") }).map(Utility.trimProper _) must equal (
+          (<iq type="get" id="3456" to="somebody" from="someone">
+            <query xmlns="http://jabber.org/protocol/disco#items">
+              <item jid="somebody" />
+            </query>
+          </iq>).map(Utility.trimProper _)
+        )
+      }
 
 
     }

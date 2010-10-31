@@ -8,7 +8,7 @@ object DiscoItem {
 
   import Implicits._
 
-  def apply(jid: String, name: Option[String], node: Option[String]) = {
+  def apply(jid: String, name: Option[String] = None, node: Option[String] = None) = {
     require(jid.isNotBlank, "You need to provide a jid for this disco item")
     val res = <item jid={jid}></item>
     var attrs = Map[String, String]()
