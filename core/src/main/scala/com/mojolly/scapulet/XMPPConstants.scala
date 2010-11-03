@@ -15,6 +15,8 @@ object XMPPConstants {
   val PING_EXTENSIONS_NS = "http://www.xmpp.org/extensions/xep-0199.html#ns"
   val XMPP_PING_NS = "urn:xmpp:ping"
   val VCARD_TEMP_NS = "vcard-temp"
-
+  val TLS_NS = "urn:ietf:params:xml:ns:xmpp-tls"
+  val SASL_NS = "urn:ietf:params:xml:ns:xmpp-sasl"
+  val XMPP_STREAMS_NS = "urn:ietf:params:xml:ns:xmpp-streams"
 
 }

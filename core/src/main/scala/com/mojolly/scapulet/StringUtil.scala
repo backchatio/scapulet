@@ -37,6 +37,4 @@ object StringUtil extends Logging {
     sb.append(Integer.toString(b.toInt & 0xff, 16))
   }).toString
 
-  
-
 }

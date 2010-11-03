@@ -58,7 +58,7 @@ object ClientConnection {
       _out = new BufferedWriter(new OutputStreamWriter(_connection.getOutputStream, Utf8))
       _in = _connection.getInputStream
       spawn {
-        _out write generateStreamStart(domain)
+        _out write generateStreamStart(Some(domain))
         while (!_shutdown) { read }
       }
 
@@ -83,10 +83,10 @@ object ClientConnection {
 
     private def loadXml(line: String) = {
       try {
-        List(XML.loadString(source))
+        List(XML.loadString(line))
       } catch {
         case e: SAXParseException => {
-          val doc = XML.loadString("<wrapper>%s</wrapper>".format(source))
+          val doc = XML.loadString("<wrapper>%s</wrapper>".format(line))
           doc.child.toList
         }
       }
