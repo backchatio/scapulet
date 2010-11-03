@@ -24,6 +24,22 @@ object Scapulet {
     def address = "%s.%s".format(userName, domain)
     def asHexSecret(id: String) = StringUtil.hash("%s%s".format(id, password))
   }
+  case class ClientConfig(
+     userName: String,
+     password: String,
+     host: String,
+     virtualHost: Option[String] = None,
+     port: Int = 5222,
+     useTLS: Boolean = true,
+     useSASL: Boolean = true,
+     connectionTimeout: Duration = Duration(10, TimeUnit.SECONDS),
+     reconnectDelay: Duration = Duration(5, TimeUnit.SECONDS),
+     connectionCallback: Option[ActorRef] = None,
+     maxThreads: Int = 25) extends NotNull {
+    def domain = virtualHost getOrElse host
+    def address = "%s@%s".format(userName, domain)
+    def asHexSecret(id: String) = StringUtil.hash("%s%s".format(id, password))
+  }
 //  case class ComponentConfig(connectionConfig: ConnectionConfig, ) extends NotNull
 
 
@@ -51,6 +67,10 @@ object Scapulet {
     val comp = actorOf(new ScapuletComponent(conn))
     supervisor startLink comp
     (comp, conn)
+  }
+
+  def makeClientConnection(connectionConfig: ClientConfig) = {
+
   }
 
 
