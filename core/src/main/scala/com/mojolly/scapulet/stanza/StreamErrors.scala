@@ -4,7 +4,6 @@ package stanza
 import xml._
 import XMPPConstants._
 import util.Implicits._
-import collection.mutable.ArrayBuffer
 
 object StreamErrors {
   sealed trait XMPPStreamError
@@ -24,11 +23,8 @@ object StreamErrors {
       case err @ <stream:error>{ ch @ _*}</stream:error> if !(err \\ condition).isEmpty => {
         val txt = (err \ "text").text
         val text = if(txt.isNotBlank) Some(txt) else None
-        val appCond = ch.filterNot(n => (condition :: "text" :: "" :: Nil).contains(n.label))
-        val c = if (appCond.isEmpty) Seq[Node]() else {
-          val ArrayBuffer(ac) = appCond
-          ac
-        }
+        val appCond = ch.filterNot(n => (condition :: "text" :: Nil).contains(n.label))
+        val c = NodeSeq.fromSeq(appCond)
         Some((text, c))
       }
       case _ => None

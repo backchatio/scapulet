@@ -4,7 +4,7 @@
 
 :server-root "~/.emacs.d/ensime"
 
-:project-package "com.mojolly.scapulet"
+:project-package "com.mojolly.scapulet.pubsub"
 
 :use-sbt t
 

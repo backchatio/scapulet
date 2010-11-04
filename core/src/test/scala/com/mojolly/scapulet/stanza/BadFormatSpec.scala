@@ -36,20 +36,20 @@ class BadFormatSpec extends WordSpec with MustMatchers {
         case BadFormat(txt, app) => {
           txt must not be ('defined)
           app must not be ('empty)
-          app must be (<the-condition />.toSeq)
+          app.toString must equal (<the-condition />.toString) // lame, I know but at least it works. Sometimes static typing bites
         }
         case _ => fail("Couldn't match a bad-format error")
       }
     }
     "match an error with a text and app condition" in {
       val em = "The error message"
-      val ac = <the-condition />.toSeq
+      val ac = <the-condition />
       errorStanzaWithTextAndAppCondition(em, ac) match {
         case BadFormat(txt, app) => {
           txt must be ('defined)
           app must not be ('empty)
           txt must be (Some(em))
-          app must be (ac)
+          app.toString must equal (ac.toString) //lame, I know but at least it works
         }
         case _ => fail("Couldn't match a bad-format error")
       }
