@@ -8,4 +8,6 @@ object Exceptions {
     def this() = this("There was an error")
   }
   class UnauthorizedException(msg: String) extends ScapuletException(msg)
+  class SASLAuthenticationFailed(e: Throwable) extends ScapuletException("SASL authentication failed!", e)
+  class NotSupportedException extends ScapuletException("Not supported")
 }

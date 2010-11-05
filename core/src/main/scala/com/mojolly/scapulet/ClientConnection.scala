@@ -1,6 +1,5 @@
 package com.mojolly.scapulet
 
-import com.mojolly.scapulet.Scapulet.{ClientConfig, ConnectionConfig}
 import akka.util.Logging
 import java.io._
 import akka.actor.ActorRef
@@ -8,6 +7,7 @@ import java.net.{ InetSocketAddress, Socket }
 import xml._
 import StringUtil._
 import XMPPConstants._
+import com.mojolly.scapulet.Scapulet.{ScapuletConnection, ClientConfig, ConnectionConfig}
 
 object ClientConnection {
 
@@ -33,7 +33,7 @@ object ClientConnection {
     }
   }
 
-  class SocketConnection(connectionConfig: ClientConfig) extends Logging {
+  class SocketConnection(connectionConfig: ClientConfig) extends ScapuletConnection with Logging {
     import connectionConfig._
     import concurrent.ops._
 

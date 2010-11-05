@@ -33,6 +33,7 @@ object Implicits {
     def isBlank = s == null || s.trim.isEmpty
     def isNotBlank = s != null && !s.trim.isEmpty
 
+    def isNotNull = s != null
 
   }
 }

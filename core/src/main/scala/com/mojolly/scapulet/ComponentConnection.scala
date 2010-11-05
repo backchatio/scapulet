@@ -54,65 +54,65 @@ object ComponentConnection {
     }
   }
 
-  class SocketConnection(connectionConfig: ConnectionConfig) extends Thread with Logging {
-    import connectionConfig._
-    import concurrent.ops._
+//  class SocketConnection(connectionConfig: ConnectionConfig) extends Thread with Logging {
+//    import connectionConfig._
+//    import concurrent.ops._
+//
+//    private var _out: Writer = _
+//    private var _in: InputStream = _
+//    private var _connection: Socket = _
+//    private var _shutdown = false
+//
+//    private var _xmlProcessorOption: Option[ActorRef] = None
+//
+//    def xmlProcessor = _xmlProcessorOption
+//    def xmlProcessor_=(processor: ActorRef) = _xmlProcessorOption = Option(processor)
+//
+//    val serverAddress = new InetSocketAddress(host, port)
+//    def address = connectionConfig.address
+//    def hexCredentials(id: String) = asHexSecret(id)
+//
+//
+//    def connect = {
+//      _connection = new Socket
+//      _connection.connect(serverAddress, connectionTimeout.toMillis.toInt)
+//      _out = new BufferedWriter(new OutputStreamWriter(_connection.getOutputStream, Utf8))
+//      _in = _connection.getInputStream
+//      spawn {
+//        while (!_shutdown) {
+//          val reader = new XMPPStreamReader(_in)
+//          val stanza = reader.read
+//          _xmlProcessorOption foreach { _ ! stanza }
+//        }
+//      }
+//
+//    }
+//
+//
+//    def write(nodes: Seq[Node]) = {
+//      _out write nodes.map(xml.Utility.trimProper _).toString
+//      _out.flush
+//    }
+//
+//
+//    def disconnect = {
+//      _shutdown = true
+//
+//      // Log but swallow all errors while closing the connection
+//      try {
+//        _connection.close
+//      } catch {
+//        case e => log.error(e, "An error occurred while closing the connection")
+//      }
+//
+//      log info "XMPP component [%s] disconnected from host [%s:%d].".format(address, host, port)
+//      _connection = null
+//    }
+//
+//
+//  }
 
-    private var _out: Writer = _
-    private var _in: InputStream = _
-    private var _connection: Socket = _
-    private var _shutdown = false
-
-    private var _xmlProcessorOption: Option[ActorRef] = None
-
-    def xmlProcessor = _xmlProcessorOption
-    def xmlProcessor_=(processor: ActorRef) = _xmlProcessorOption = Option(processor)
-
-    val serverAddress = new InetSocketAddress(host, port)
-    def address = connectionConfig.address
-    def hexCredentials(id: String) = asHexSecret(id)
-
-
-    def connect = {
-      _connection = new Socket
-      _connection.connect(serverAddress, connectionTimeout.toMillis.toInt)
-      _out = new BufferedWriter(new OutputStreamWriter(_connection.getOutputStream, Utf8))
-      _in = _connection.getInputStream
-      spawn {
-        while (!_shutdown) {
-          val reader = new XMPPStreamReader(_in)
-          val stanza = reader.read
-          _xmlProcessorOption foreach { _ ! stanza } 
-        }
-      }
-
-    }
-
-
-    def write(nodes: Seq[Node]) = {
-      _out write nodes.map(xml.Utility.trimProper _).toString
-      _out.flush
-    }
-
-
-    def disconnect = {
-      _shutdown = true
-      
-      // Log but swallow all errors while closing the connection
-      try {
-        _connection.close
-      } catch {
-        case e => log.error(e, "An error occurred while closing the connection")
-      }
-
-      log info "XMPP component [%s] disconnected from host [%s:%d].".format(address, host, port)
-      _connection = null
-    }
-
-
-  }
-
-  class FaultTolerantComponentConnection(connectionConfig: ConnectionConfig) extends Logging {
+  class FaultTolerantComponentConnection(connectionConfig: ConnectionConfig) extends ScapuletConnection with Logging {
     import connectionConfig._
 
     def address = connectionConfig.address
@@ -164,7 +164,7 @@ object ComponentConnection {
       })
       writeFuture.awaitUninterruptibly(5, TimeUnit.SECONDS)
     }
-    def write(nodes: NodeSeq) {
+    def write(nodes: Seq[Node]) {
       val txt = nodes.map(Utility.trimProper _).toString
       val buff = ChannelBuffers.copiedBuffer(txt, Utf8)
       val writeFuture = openHandlers.write(buff)

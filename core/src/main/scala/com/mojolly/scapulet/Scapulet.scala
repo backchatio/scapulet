@@ -42,6 +42,9 @@ object Scapulet {
   }
 //  case class ComponentConfig(connectionConfig: ConnectionConfig, ) extends NotNull
 
+  trait ScapuletConnection {
+    def write(stanza: Seq[Node]) : Unit
+  }
 
   sealed trait ScapuletMessage
   case class RegisterHandler(module: ActorRef) extends ScapuletMessage
