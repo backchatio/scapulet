@@ -18,5 +18,6 @@ object XMPPConstants {
   val TLS_NS = "urn:ietf:params:xml:ns:xmpp-tls"
   val SASL_NS = "urn:ietf:params:xml:ns:xmpp-sasl"
   val XMPP_STREAMS_NS = "urn:ietf:params:xml:ns:xmpp-streams"
+  val COMPRESSION_NS = "http ://jabber.org/features/compress"
 
 }

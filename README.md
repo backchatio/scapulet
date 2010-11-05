@@ -2,7 +2,7 @@
   
   Scapulet 
   
-Scapulet is an XMPP component library that currently supports XEP-0114 (http://xmpp.org/extensions/xep-0114.html).  
+Scapulet is an XMPP library that currently supports XEP-0114 for components and implements an XMPP Client connection for writing bots.
 It uses the standard scala library for parsing xml so you can match against it using the xml snippets.
 It uses akka for concurrency and fault-tolerance.
 

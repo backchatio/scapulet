@@ -142,17 +142,14 @@ object SASLAuthentication {
   object SASLMechanisms {
 
     class SASLPlainMechanism extends SASLMechanism  {
-
       val name = "PLAIN"
     }
 
     class SASLCramMD5Mechanism extends SASLMechanism  {
-
       val name = "CRAM-MD5"
     }
 
     class SASLDigestMD5Mechanism extends SASLMechanism  {
-
       val name = "DIGEST-MD5"
     }
   }
