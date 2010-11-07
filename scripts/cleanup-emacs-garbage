@@ -1,0 +1,5 @@
+#!/bin/bash
+find . -type d -name '.AppleDouble' -exec rm -rf {} \;
+find . -name '.#*' -exec rm -rf {} \;
+find . -name '#*' -exec rm -rf {} \;
+find . -name '._*' -exec rm -rf {} \;

@@ -24,21 +24,31 @@ object Scapulet {
     def address = "%s.%s".format(userName, domain)
     def asHexSecret(id: String) = StringUtil.hash("%s%s".format(id, password))
   }
+  case class TLSConfig(
+    keystorePath: String = "",
+    keystoreType: String = "jks",
+    truststorePath: String = "",
+    truststoreType: String = "jks",
+    truststorePassword: String = "changeit",
+    pkcs11Library: String = "pkcs11.config",
+    verifyChain: Boolean = false,
+    verifyRootCA: Boolean = false,
+    verifyMatchingDomain: Boolean = false,
+    allowExpiredCertificates: Boolean = true,
+    allowSelfSignedCertificate: Boolean = false
+  )
   case class ClientConfig(
-     userName: String,
-     password: String,
-     host: String,
-     virtualHost: Option[String] = None,
-     port: Int = 5222,
+     connectionConfig: ConnectionConfig,
+     tlsConfig: TLSConfig,
      useTLS: Boolean = true,
      useSASL: Boolean = true,
-     connectionTimeout: Duration = Duration(10, TimeUnit.SECONDS),
-     reconnectDelay: Duration = Duration(5, TimeUnit.SECONDS),
-     connectionCallback: Option[ActorRef] = None,
-     maxThreads: Int = 25) extends NotNull {
-    def domain = virtualHost getOrElse host
-    def address = "%s@%s".format(userName, domain)
-    def asHexSecret(id: String) = StringUtil.hash("%s%s".format(id, password))
+     useCompression: Boolean = true,
+     sendPresence: Boolean = true,
+     loadRosterAtStartup: Boolean = false
+     ) extends NotNull {
+    def domain = connectionConfig.virtualHost getOrElse connectionConfig.host
+    def address = "%s@%s".format(connectionConfig.userName, domain)
+    def asHexSecret(id: String) = StringUtil.hash("%s%s".format(id, connectionConfig.password))
   }
 //  case class ComponentConfig(connectionConfig: ConnectionConfig, ) extends NotNull
 

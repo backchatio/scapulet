@@ -26,7 +26,7 @@ object StreamFeatures {
   private def addCompressionMethods(methods: Seq[String]): NodeSeq = {
     if (!methods.isEmpty) {
       <compression xmlns={COMPRESSION_NS}>
-        {methods.map(<method>{_}</method>)}
+        {methods.map(m => <method>{m}</method>)}
       </compression>
     } else {
       Nil
@@ -37,7 +37,7 @@ object StreamFeatures {
     case feat @ <stream:features>{ ch @ _* }</stream:features> => {
       val tls = !(feat \ "starttls").isEmpty
       val mechanisms = (feat \\ "mechanism").map(_.text)
-      val compressionMethods = (feat \\ "methods")
+      val compressionMethods = (feat \\ "methods").map(_.text)
       val others = ch.filterNot(n => ("starttls" :: "mechanisms" :: Nil).contains(n.label))
       Some((tls, mechanisms, NodeSeq.fromSeq(others)))
     }

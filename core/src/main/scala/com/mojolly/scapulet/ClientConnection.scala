@@ -66,13 +66,15 @@ object ClientConnection {
 
     def read {
       val reader = new BufferedReader(new InputStreamReader(_in, Utf8))
+      //val reader = new XMPPStreamReader(_in)
       var line = reader.readLine
       while (line != null) {
         line match {
           case StreamResponse(id, from) => {
             
           }
-          case _ => {
+          case _ => {:w
+
             val stanza = loadXml(line)
             _xmlProcessorOption foreach { _ ! stanza }
           }
