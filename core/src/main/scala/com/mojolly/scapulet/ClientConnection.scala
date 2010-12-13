@@ -73,7 +73,7 @@ object ClientConnection {
           case StreamResponse(id, from) => {
             
           }
-          case _ => {:w
+          case _ => {
 
             val stanza = loadXml(line)
             _xmlProcessorOption foreach { _ ! stanza }

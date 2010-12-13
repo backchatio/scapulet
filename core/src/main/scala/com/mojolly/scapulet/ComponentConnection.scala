@@ -3,8 +3,12 @@ package com.mojolly.scapulet
 import akka.util.Logging
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory
 import org.jboss.netty.bootstrap.ClientBootstrap
+import org.jboss.netty.channel.group.{ChannelGroupFuture, ChannelGroupFutureListener, DefaultChannelGroup}
 import org.jboss.netty.channel._
-import group.{ChannelGroupFuture, ChannelGroupFutureListener, DefaultChannelGroup}
+import java.nio.channels.Channels
+
+//import org.jboss.netty.channel._
+//import group.{ChannelGroupFuture, ChannelGroupFutureListener, DefaultChannelGroup}
 import org.jboss.netty.handler.codec.string.{StringDecoder}
 import com.mojolly.scapulet.Exceptions.UnauthorizedException
 import org.jboss.netty.util.{Timeout, TimerTask, HashedWheelTimer, Timer}
@@ -281,6 +285,7 @@ object ComponentConnection {
     override def messageReceived(ctx: ChannelHandlerContext, e: MessageEvent) {
       try {
         val ch = e.getChannel
+
         val msg = e.getMessage.asInstanceOf[String]
         log debug "Message received: %s".format(msg)
         msg match {
@@ -299,7 +304,7 @@ object ComponentConnection {
                 connection.notifyCallback(Connected)
               }
               case x: Node => xmlProcessor.foreach(a => a ! Utility.trim(x) )
-              case _ =>  //componentConfig.xmlProcessor foreach { _ ! x }
+              case _ =>
             } }
           }
         }
