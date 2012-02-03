@@ -1,3 +1,4 @@
+import scala.xml._
 
 name := "scapulet"
 
@@ -14,13 +15,18 @@ scalacOptions ++= Seq("-optimize", "-unchecked", "-deprecation", "-Xcheckinit", 
 autoCompilerPlugins := true
 
 libraryDependencies ++= Seq(
+  "commons-lang" % "commons-lang" % "2.5",
+  "org.gnu.inet" % "libidn" % "1.15",
+  "net.iharder" % "base64" % "2.3.8",
+  "com.google.guava" % "guava" % "10.0.1",
   "com.typesafe.akka" % "akka-file-mailbox" % "2.0-M3",
   "com.typesafe.akka" % "akka-slf4j" % "2.0-M3" % "provided",
   "com.typesafe.akka" % "akka-testkit" % "2.0-M3" % "test",
   compilerPlugin("org.scala-lang.plugins" % "continuations" % "2.9.1"),
   compilerPlugin("org.scala-tools.sxr" % "sxr_2.9.0" % "0.2.7"),
   "junit" % "junit" % "4.10" % "test",
-  "org.specs2" %% "specs2" % "1.7.1" % "test"
+  "org.specs2" %% "specs2" % "1.7.1" % "test",
+  "org.scalatest" %% "scalatest" % "1.6.1" % "test"
 )
 
 homepage := Some(new URL("http://www.scalatra.org/"))
