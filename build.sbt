@@ -30,11 +30,11 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "1.6.1" % "test"
 )
 
-homepage := Some(new URL("http://www.scalatra.org/"))
+homepage := Some(url("https://github.com/mojolly/scapulet"))
 
 startYear := Some(2010)
 
-licenses := Seq(("BSD", new URL("http://github.com/mojolly/scapulet/raw/HEAD/LICENSE")))
+licenses := Seq(("BSD", url("http://github.com/mojolly/scapulet/raw/HEAD/LICENSE")))
 
 pomExtra <<= (pomExtra, name, description) {(pom, name, desc) => pom ++ Group(
   <mailingLists>
@@ -48,7 +48,8 @@ pomExtra <<= (pomExtra, name, description) {(pom, name, desc) => pom ++ Group(
   </mailingLists>
   <scm>
     <connection>scm:git:git://github.com/mojolly/scapulet.git</connection>
-    <url>http://github.com/mojolly/scapulet</url>
+    <developerConnection>scm:git:git@github.com:mojolly/scapulet.git</developerConnection>
+    <url>https://github.com/mojolly/scapulet</url>
   </scm>
   <developers>
     <developer>
