@@ -1,7 +1,7 @@
 package io.backchat.scapulet
 
 import akka.util.duration._
-import xml.{Node, NodeSeq}
+import xml.{ Node, NodeSeq }
 import akka.actor.ActorRef
 import akka.util.Duration
 import java.net.InetSocketAddress
@@ -9,15 +9,15 @@ import java.net.InetSocketAddress
 object Scapulet {
 
   case class ConnectionConfig(
-                               userName: String,
-                               password: String,
-                               host: String,
-                               port: Int,
-                               virtualHost: Option[String] = None,
-                               connectionTimeout: Duration = 10 seconds,
-                               reconnectDelay: Duration = 5 seconds,
-                               connectionCallback: Option[ActorRef] = None,
-                               maxThreads: Int = 25) extends NotNull {
+      userName: String,
+      password: String,
+      host: String,
+      port: Int,
+      virtualHost: Option[String] = None,
+      connectionTimeout: Duration = 10 seconds,
+      reconnectDelay: Duration = 5 seconds,
+      connectionCallback: Option[ActorRef] = None,
+      maxThreads: Int = 25) extends NotNull {
     def domain = virtualHost getOrElse host
 
     def address = "%s.%s".format(userName, domain)
@@ -28,28 +28,26 @@ object Scapulet {
   }
 
   case class TLSConfig(
-                        keystorePath: String = "",
-                        keystoreType: String = "jks",
-                        truststorePath: String = "",
-                        truststoreType: String = "jks",
-                        truststorePassword: String = "changeit",
-                        pkcs11Library: String = "pkcs11.config",
-                        verifyChain: Boolean = false,
-                        verifyRootCA: Boolean = false,
-                        verifyMatchingDomain: Boolean = false,
-                        allowExpiredCertificates: Boolean = true,
-                        allowSelfSignedCertificate: Boolean = false
-                        )
+    keystorePath: String = "",
+    keystoreType: String = "jks",
+    truststorePath: String = "",
+    truststoreType: String = "jks",
+    truststorePassword: String = "changeit",
+    pkcs11Library: String = "pkcs11.config",
+    verifyChain: Boolean = false,
+    verifyRootCA: Boolean = false,
+    verifyMatchingDomain: Boolean = false,
+    allowExpiredCertificates: Boolean = true,
+    allowSelfSignedCertificate: Boolean = false)
 
   case class ClientConfig(
-                           connectionConfig: ConnectionConfig,
-                           tlsConfig: TLSConfig,
-                           useTLS: Boolean = true,
-                           useSASL: Boolean = true,
-                           useCompression: Boolean = true,
-                           sendPresence: Boolean = true,
-                           loadRosterAtStartup: Boolean = false
-                           ) extends NotNull {
+      connectionConfig: ConnectionConfig,
+      tlsConfig: TLSConfig,
+      useTLS: Boolean = true,
+      useSASL: Boolean = true,
+      useCompression: Boolean = true,
+      sendPresence: Boolean = true,
+      loadRosterAtStartup: Boolean = false) extends NotNull {
     def domain = connectionConfig.virtualHost getOrElse connectionConfig.host
 
     def address = "%s@%s".format(connectionConfig.userName, domain)
@@ -98,33 +96,32 @@ object Scapulet {
   case class SendFailed(stanza: NodeSeq) extends ComponentConnectionMessage
 
   case class Sent(xml: NodeSeq) extends ComponentConnectionMessage
-//
-//  def makeComponentConnection(connectionConfig: ConnectionConfig) = {
-//    val conn = new FaultTolerantComponentConnection(connectionConfig)
-//    val comp = actorOf(new ScapuletComponent(conn))
-//    supervisor startLink comp
-//    (comp, conn)
-//  }
-//
-//  def makeClientConnection(connectionConfig: ClientConfig) = {
-//
-//  }
+  //
+  //  def makeComponentConnection(connectionConfig: ConnectionConfig) = {
+  //    val conn = new FaultTolerantComponentConnection(connectionConfig)
+  //    val comp = actorOf(new ScapuletComponent(conn))
+  //    supervisor startLink comp
+  //    (comp, conn)
+  //  }
+  //
+  //  def makeClientConnection(connectionConfig: ClientConfig) = {
+  //
+  //  }
 
+  //  class ScapuletSupervisor extends Actor {
+  //
+  //    import self._
+  //
+  //    faultHandler = OneForOneStrategy(List(classOf[Throwable]), 5, 5000)
+  //
+  //    def receive = {
+  //      case _ => {}
+  //    }
+  //  }
 
-//  class ScapuletSupervisor extends Actor {
-//
-//    import self._
-//
-//    faultHandler = OneForOneStrategy(List(classOf[Throwable]), 5, 5000)
-//
-//    def receive = {
-//      case _ => {}
-//    }
-//  }
-
-//  private[scapulet] val supervisor = actorOf[ScapuletSupervisor].start
-//
-//  def shutdownAll = supervisor.shutdownLinkedActors
+  //  private[scapulet] val supervisor = actorOf[ScapuletSupervisor].start
+  //
+  //  def shutdownAll = supervisor.shutdownLinkedActors
 
   def systemInfo: String = {
     "%s-%s-%s, %s-%s %s".format(
@@ -136,6 +133,5 @@ object Scapulet {
       System.getProperty("java.vm.vendor")
     )
   }
-
 
 }

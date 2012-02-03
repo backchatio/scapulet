@@ -1,12 +1,12 @@
 package io.backchat.scapulet
 
 import java.io._
-import java.net.{ Socket}
+import java.net.{ Socket }
 import xml._
 import StringUtil._
 import XMPPConstants._
-import akka.actor.{ActorSystem, ActorRef}
-import io.backchat.scapulet.Scapulet.{ScapuletConnection, ClientConfig}
+import akka.actor.{ ActorSystem, ActorRef }
+import io.backchat.scapulet.Scapulet.{ ScapuletConnection, ClientConfig }
 
 object ClientConnection {
 
@@ -55,7 +55,6 @@ object ClientConnection {
 
     def hexCredentials(id: String) = asHexSecret(id)
 
-
     def connect = {
       _connection = new Socket
       _connection.connect(serverAddress, connectionConfig.connectionConfig.connectionTimeout.toMillis.toInt)
@@ -103,12 +102,12 @@ object ClientConnection {
     }
 
     private def generateStreamStart(
-                                     to: Option[String] = None,
-                                     from: Option[String] = None,
-                                     id: Option[String] = None,
-                                     xmlLang: Option[String] = Some("en"),
-                                     xmlns: Option[String] = Some(CLIENT_NS),
-                                     version: Option[String] = Some("1.0")) = {
+      to: Option[String] = None,
+      from: Option[String] = None,
+      id: Option[String] = None,
+      xmlLang: Option[String] = Some("en"),
+      xmlns: Option[String] = Some(CLIENT_NS),
+      version: Option[String] = Some("1.0")) = {
       val sb = new StringBuffer
       sb.append("""<stream:stream xmlns:stream="http://etherx.jabber.org/streams" """)
       xmlns foreach {
@@ -133,12 +132,10 @@ object ClientConnection {
       sb.toString
     }
 
-
     def write(nodes: Seq[Node]) = {
       _out write nodes.map(xml.Utility.trimProper _).toString
       _out.flush
     }
-
 
     def disconnect = {
       _shutdown = true
@@ -153,7 +150,6 @@ object ClientConnection {
       logger info "XMPP component [%s] disconnected from host [%s:%d].".format(address, host, port)
       _connection = null
     }
-
 
   }
 

@@ -4,28 +4,31 @@ package stanza
 import scala.xml._
 import XMPPConstants._
 
-
 object StreamFeatures {
 
   def apply(requireTLS: Boolean = true,
-            SASLMechanisms: Seq[String] = List("PLAIN", "DIGEST-MD5"),
-            compressionMethods: Seq[String] = Nil,
-            extraFeatures: Seq[Node] = Seq.empty) = {
+    SASLMechanisms: Seq[String] = List("PLAIN", "DIGEST-MD5"),
+    compressionMethods: Seq[String] = Nil,
+    extraFeatures: Seq[Node] = Seq.empty) = {
     <stream:features>
-        <starttls xmlns={TLS_NS}/>{addCompressionMethods(compressionMethods)}<mechanisms xmlns={SASL_NS}>
-      {SASLMechanisms.map(m => <mechanism>
-        {m}
-      </mechanism>)}
-    </mechanisms>{extraFeatures}
+      <starttls xmlns={ TLS_NS }/>{ addCompressionMethods(compressionMethods) }<mechanisms xmlns={ SASL_NS }>
+                                                                                 {
+                                                                                   SASLMechanisms.map(m => <mechanism>
+                                                                                                             { m }
+                                                                                                           </mechanism>)
+                                                                                 }
+                                                                               </mechanisms>{ extraFeatures }
     </stream:features>.map(Utility.trim(_)).theSeq.head
   }
 
   private def addCompressionMethods(methods: Seq[String]): NodeSeq = {
     if (!methods.isEmpty) {
-      <compression xmlns={COMPRESSION_NS}>
-        {methods.map(m => <method>
-        {m}
-      </method>)}
+      <compression xmlns={ COMPRESSION_NS }>
+        {
+          methods.map(m => <method>
+                             { m }
+                           </method>)
+        }
       </compression>
     } else {
       Nil

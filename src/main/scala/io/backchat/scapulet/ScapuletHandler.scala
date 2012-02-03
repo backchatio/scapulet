@@ -2,13 +2,13 @@ package io.backchat.scapulet
 
 import Scapulet._
 import stanza._
-import akka.actor.{Actor}
-import xml.{Elem, Node}
+import akka.actor.{ Actor }
+import xml.{ Elem, Node }
 
 trait ScapuletHandler extends ErrorReply with ReplyMethods {
   this: Actor =>
-  
-  @transient protected lazy val logger = akka.event.Logging(context.system, this) 
+
+  @transient protected lazy val logger = akka.event.Logging(context.system, this)
 
   protected def replyWith(msg: => Seq[Node]) = {
     val m: Seq[Node] = msg

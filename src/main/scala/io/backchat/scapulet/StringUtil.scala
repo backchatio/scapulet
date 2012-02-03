@@ -1,6 +1,6 @@
 package io.backchat.scapulet
 
-import java.security.{NoSuchAlgorithmException, MessageDigest}
+import java.security.{ NoSuchAlgorithmException, MessageDigest }
 import java.io.UnsupportedEncodingException
 import java.nio.charset.Charset
 

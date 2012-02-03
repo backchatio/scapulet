@@ -5,7 +5,9 @@ import xml._
 
 object Implicits {
 
-  implicit def addAttributesFromMap(elem: Elem) = new {
+  implicit def addAttributesFromMap(elem: Elem) = new AllowAddingAttributes(elem)
+
+  class AllowAddingAttributes(elem: Elem) {
     def %(attrs: Map[String, String]) = {
       (elem /: (attrs map {
         case (k, v) => new UnprefixedAttribute(k, v, Null)
@@ -13,10 +15,9 @@ object Implicits {
     }
   }
 
-
   implicit def string2jidString(s: String) = new JidString(s)
 
-  protected class JidString(s: String) {
+  class JidString(s: String) {
     def bareJid = s match {
       case JID(bareJid, _) => Some(bareJid)
       case _ => None

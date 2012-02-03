@@ -18,9 +18,9 @@ object DiscoItemsQuery {
     require(from.isNotBlank, "You need to provide a sender address for this disco items query")
     require(to.isNotBlank, "You need to provide a recipient address for this disco items query")
 
-    <iq type="get" id={id} to={to} from={from}>
-      <query xmlns={DISCO_ITEMS_NS}>
-        {content}
+    <iq type="get" id={ id } to={ to } from={ from }>
+      <query xmlns={ DISCO_ITEMS_NS }>
+        { content }
       </query>
     </iq>
   }

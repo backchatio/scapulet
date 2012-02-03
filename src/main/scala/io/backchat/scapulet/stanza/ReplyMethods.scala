@@ -8,7 +8,6 @@ trait ReplyMethods {
 
   import Implicits._
 
-
   /**
    * Creates an info query reply stanza, additional content can be added in the curry function
    *
@@ -21,9 +20,9 @@ trait ReplyMethods {
    * @return a NodeSeq representing the stanza
    */
   protected def iqReply[TNode <: NodeSeq](ns: String, id: String, from: String, to: String)(content: Seq[TNode]) = {
-    <iq type="result" id={id} to={to} from={from}>
-      <query xmlns={ns}>
-        {content}
+    <iq type="result" id={ id } to={ to } from={ from }>
+      <query xmlns={ ns }>
+        { content }
       </query>
     </iq>
   }
@@ -39,9 +38,9 @@ trait ReplyMethods {
    * @return a NodeSeq representing the presence stanza
    */
   protected def presence(from: String, to: String, presType: Option[String])(children: Seq[Node]) = {
-    val ele = <presence from={from} to={to}>
-      {children}
-    </presence>
+    val ele = <presence from={ from } to={ to }>
+                { children }
+              </presence>
     if (presType.isDefined) {
       (presType map {
         pt => ele % Map("type" -> pt)
@@ -49,6 +48,5 @@ trait ReplyMethods {
     } else ele
 
   }
-
 
 }

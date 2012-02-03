@@ -4,7 +4,6 @@ import org.scalatest.matchers.MustMatchers
 import org.scalatest.WordSpec
 import stanza.JID
 
-
 class StringUtilSpec extends WordSpec with MustMatchers {
 
   "The StringUtil" when {

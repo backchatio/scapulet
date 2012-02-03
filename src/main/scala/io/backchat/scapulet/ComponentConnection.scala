@@ -2,22 +2,21 @@ package io.backchat.scapulet
 
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory
 import org.jboss.netty.bootstrap.ClientBootstrap
-import org.jboss.netty.channel.group.{ChannelGroupFuture, ChannelGroupFutureListener, DefaultChannelGroup}
+import org.jboss.netty.channel.group.{ ChannelGroupFuture, ChannelGroupFutureListener, DefaultChannelGroup }
 import org.jboss.netty.channel._
 import io.backchat.scapulet.Scapulet._
-import org.jboss.netty.handler.codec.string.{StringDecoder}
-import org.jboss.netty.util.{Timeout, TimerTask, HashedWheelTimer, Timer}
+import org.jboss.netty.handler.codec.string.{ StringDecoder }
+import org.jboss.netty.util.{ Timeout, TimerTask, HashedWheelTimer, Timer }
 import xml._
-import java.net.{Socket, InetSocketAddress}
+import java.net.{ Socket, InetSocketAddress }
 import java.io._
 import org.jboss.netty.buffer.ChannelBuffers
-import StringUtil.{Utf8, hash}
-import java.util.concurrent.{TimeUnit, Executors}
+import StringUtil.{ Utf8, hash }
+import java.util.concurrent.{ TimeUnit, Executors }
 import io.backchat.scapulet.Exceptions.UnauthorizedException
-import akka.actor.{ActorSystem, ActorRef}
+import akka.actor.{ ActorSystem, ActorRef }
 
 object ComponentConnection {
-
 
   private[scapulet] object XMPPStrings {
     val NS_ACCEPT = "jabber:component:accept"
@@ -30,7 +29,6 @@ object ComponentConnection {
   }
 
   import XMPPStrings._
-
 
   object StreamResponse {
     private val streamRegex = """(<\?[^?]>)?<stream:stream[^>]*>""".r
@@ -55,7 +53,63 @@ object ComponentConnection {
     }
   }
 
-
+  //  class SocketConnection(connectionConfig: ConnectionConfig) extends Thread with Logging {
+  //    import connectionConfig._
+  //    import concurrent.ops._
+  //
+  //    private var _out: Writer = _
+  //    private var _in: InputStream = _
+  //    private var _connection: Socket = _
+  //    private var _shutdown = false
+  //
+  //    private var _xmlProcessorOption: Option[ActorRef] = None
+  //
+  //    def xmlProcessor = _xmlProcessorOption
+  //    def xmlProcessor_=(processor: ActorRef) = _xmlProcessorOption = Option(processor)
+  //
+  //    val serverAddress = new InetSocketAddress(host, port)
+  //    def address = connectionConfig.address
+  //    def hexCredentials(id: String) = asHexSecret(id)
+  //
+  //
+  //    def connect = {
+  //      _connection = new Socket
+  //      _connection.connect(serverAddress, connectionTimeout.toMillis.toInt)
+  //      _out = new BufferedWriter(new OutputStreamWriter(_connection.getOutputStream, Utf8))
+  //      _in = _connection.getInputStream
+  //      spawn {
+  //        while (!_shutdown) {
+  //          val reader = new XMPPStreamReader(_in)
+  //          val stanza = reader.read
+  //          _xmlProcessorOption foreach { _ ! stanza }
+  //        }
+  //      }
+  //
+  //    }
+  //
+  //
+  //    def write(nodes: Seq[Node]) = {
+  //      _out write nodes.map(xml.Utility.trimProper _).toString
+  //      _out.flush
+  //    }
+  //
+  //
+  //    def disconnect = {
+  //      _shutdown = true
+  //
+  //      // Log but swallow all errors while closing the connection
+  //      try {
+  //        _connection.close
+  //      } catch {
+  //        case e => log.error(e, "An error occurred while closing the connection")
+  //      }
+  //
+  //      log info "XMPP component [%s] disconnected from host [%s:%d].".format(address, host, port)
+  //      _connection = null
+  //    }
+  //
+  //
+  //  }
 
   class FaultTolerantComponentConnection(connectionConfig: ConnectionConfig)(implicit protected val system: ActorSystem) extends ScapuletConnection with Logging {
 
@@ -68,7 +122,6 @@ object ComponentConnection {
     def xmlProcessor = _xmlProcessorOption
 
     def xmlProcessor_=(processor: ActorRef) = _xmlProcessorOption = Option(processor)
-
 
     val reconnectionTimer = new HashedWheelTimer
 
@@ -83,7 +136,6 @@ object ComponentConnection {
 
     private var _connection: ChannelFuture = _
     private val openHandlers = new DefaultChannelGroup(classOf[FaultTolerantComponentConnection].getName)
-
 
     bootstrap.setPipelineFactory(new ChannelPipelineFactory {
       def getPipeline = Channels.pipeline(
@@ -184,11 +236,11 @@ object ComponentConnection {
 
   @ChannelHandler.Sharable
   class AuthenticateHandler(
-                             bootstrap: ClientBootstrap,
-                             timer: Timer,
-                             config: ConnectionConfig,
-                             xmlProcessor: Option[ActorRef],
-                             connection: FaultTolerantComponentConnection)(implicit protected val system: ActorSystem) extends SimpleChannelHandler with Logging {
+      bootstrap: ClientBootstrap,
+      timer: Timer,
+      config: ConnectionConfig,
+      xmlProcessor: Option[ActorRef],
+      connection: FaultTolerantComponentConnection)(implicit protected val system: ActorSystem) extends SimpleChannelHandler with Logging {
 
     override def channelConnected(ctx: ChannelHandlerContext, e: ChannelStateEvent) {
       if (e.getState == ChannelState.CONNECTED) {
@@ -246,19 +298,20 @@ object ComponentConnection {
           case StreamResponse(id, from) => {
             logger info "Signing in to message with id: [%s] from [%s]".format(id, from)
             ch.write(ChannelBuffers.copiedBuffer(<handshake>
-              {connection.hexCredentials(id)}
-            </handshake>.toString, Utf8))
+                                                   { connection.hexCredentials(id) }
+                                                 </handshake>.toString, Utf8))
           }
           case s => {
             loadXml(s) foreach {
-              x => x match {
-                case <handshake/> => {
-                  logger info "Established connection to [%s:%d]".format(config.host, config.port)
-                  connection.notifyCallback(Connected)
+              x =>
+                x match {
+                  case <handshake/> => {
+                    logger info "Established connection to [%s:%d]".format(config.host, config.port)
+                    connection.notifyCallback(Connected)
+                  }
+                  case x: Node => xmlProcessor.foreach(a => a ! Utility.trim(x))
+                  case _ =>
                 }
-                case x: Node => xmlProcessor.foreach(a => a ! Utility.trim(x))
-                case _ =>
-              }
             }
           }
         }

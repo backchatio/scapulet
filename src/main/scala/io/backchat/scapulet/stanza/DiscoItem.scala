@@ -9,7 +9,7 @@ object DiscoItem {
 
   def apply(jid: String, name: Option[String] = None, node: Option[String] = None) = {
     require(jid.isNotBlank, "You need to provide a jid for this disco item")
-    val res = <item jid={jid}></item>
+    val res = <item jid={ jid }></item>
     var attrs = Map[String, String]()
     if (name.isDefined && name.get.isNotBlank) attrs += "name" -> name.get
     if (node.isDefined && node.get.isNotBlank) attrs += "node" -> node.get
@@ -17,7 +17,7 @@ object DiscoItem {
   }
 
   def unapply(elem: Node) = elem match {
-    case it@Elem(_, "item", _, _, _*) if it.attribute("jid").isDefined => {
+    case it @ Elem(_, "item", _, _, _*) if it.attribute("jid").isDefined => {
       val name = it.attribute("name") flatMap {
         a => Option(a.text)
       }

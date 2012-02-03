@@ -1,6 +1,6 @@
 package io.backchat.scapulet
 
-import xml.{Node, XML}
+import xml.{ Node, XML }
 import XMPPConstants._
 import javax.security.sasl._
 import javax.security.auth.callback._
@@ -16,13 +16,13 @@ object SASLAuthentication {
 
   abstract class Failure(condition: String) extends SASLFailure {
     def apply() = {
-      <failure xmlns={SASL_NS}>
-        {XML.loadString("<%s />" format condition)}
+      <failure xmlns={ SASL_NS }>
+        { XML.loadString("<%s />" format condition) }
       </failure>
     }
 
     def unapply(node: Node) = node match {
-      case f@ <failure>{ ch @_* }</failure> if !(f \ condition).isEmpty => {
+      case f @ <failure>{ ch @ _* }</failure> if !(f \ condition).isEmpty => {
         Some(condition)
       }
       case _ => None
@@ -45,37 +45,37 @@ object SASLAuthentication {
 
   object SASLFailure extends SASLFailure {
     def unapply(node: Node) = node match {
-      case f@ <failure>{ condition @ _* }</failure> if !condition.isEmpty => condition.headOption.map(_.label)
+      case f @ <failure>{ condition @ _* }</failure> if !condition.isEmpty => condition.headOption.map(_.label)
       case _ => None
     }
   }
 
   object Success {
-    def apply(data: String) = <success xmlns={SASL_NS}>
-      {data}
-    </success>
+    def apply(data: String) = <success xmlns={ SASL_NS }>
+                                { data }
+                              </success>
 
     def unapply(node: Node) = node match {
-      case s@ <success>{_*}</success> => Some(s.text)
+      case s @ <success>{ _* }</success> => Some(s.text)
       case _ => None
     }
   }
 
   object Challenge {
-    def apply(data: String) = <challenge xmlns={SASL_NS}>
-      {data}
-    </challenge>
+    def apply(data: String) = <challenge xmlns={ SASL_NS }>
+                                { data }
+                              </challenge>
 
     def unapply(node: Node) = node match {
-      case s@ <challenge>{_*}</challenge> => Some(s.text)
+      case s @ <challenge>{ _* }</challenge> => Some(s.text)
       case _ => None
     }
   }
 
   object Response {
     def apply(data: String) = {
-      <response xmlns={SASL_NS}>
-        {data}
+      <response xmlns={ SASL_NS }>
+        { data }
       </response>
     }
   }
@@ -88,7 +88,6 @@ object SASLAuthentication {
     protected var _userName: String = _
     protected var _password: Array[Char] = _
     protected var _hostName: String = _
-
 
     def userName = _userName
 
@@ -110,7 +109,6 @@ object SASLAuthentication {
       authenticate
     }
 
-
     def authenticate(username: String, host: String) {
       saslClient = Sasl.createSaslClient(mechanism, username, xmpp, host, saslProps, this)
       authenticate
@@ -126,9 +124,9 @@ object SASLAuthentication {
       } catch {
         case e: SaslException => throw new SASLAuthenticationFailed(e)
       }
-      connection.write(<auth mechanism={name} xmlns={SASL_NS}>
-        {authText}
-      </auth>)
+      connection.write(<auth mechanism={ name } xmlns={ SASL_NS }>
+                         { authText }
+                       </auth>)
     }
 
     def onServerChallenge(challenge: String) {
@@ -183,7 +181,6 @@ object SASLAuthentication {
     }
 
   }
-
 
 }
 

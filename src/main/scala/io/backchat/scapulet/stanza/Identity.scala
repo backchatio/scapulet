@@ -12,13 +12,13 @@ object Identity {
     require(`type`.isNotBlank, "You have to provide a type")
 
     name match {
-      case Some(nm) => <identity category={category} type={`type`} name={nm}/>
-      case _ => <identity category={category} type={`type`}/>
+      case Some(nm) => <identity category={ category } type={ `type` } name={ nm }/>
+      case _ => <identity category={ category } type={ `type` }/>
     }
   }
 
   def unapply(elem: Node) = elem match {
-    case identity@Elem(_, "identity", _, _, _*) if (identity.attribute("category").isDefined && identity.attribute("type").isDefined) => {
+    case identity @ Elem(_, "identity", _, _, _*) if (identity.attribute("category").isDefined && identity.attribute("type").isDefined) => {
       val name = identity.attribute("name") flatMap {
         a => Option(a.text)
       }
