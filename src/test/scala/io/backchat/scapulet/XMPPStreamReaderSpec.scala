@@ -1,6 +1,6 @@
 //package io.backchat.scapulet
 //
-//import com.mojolly.scapulet._
+//import io.backchat.scapulet._
 //
 //import scala.io.Source
 //import scala.xml._

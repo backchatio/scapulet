@@ -3,9 +3,7 @@ package io.backchat.scapulet
 import stanza.JID
 import xml._
 
-object Implicits {
-
-  implicit def addAttributesFromMap(elem: Elem) = new AllowAddingAttributes(elem)
+object CoreExt {
 
   class AllowAddingAttributes(elem: Elem) {
     def %(attrs: Map[String, String]) = {
@@ -14,8 +12,6 @@ object Implicits {
       }))(_ % _)
     }
   }
-
-  implicit def string2jidString(s: String) = new JidString(s)
 
   class JidString(s: String) {
     def bareJid = s match {

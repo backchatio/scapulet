@@ -9,7 +9,7 @@ import xml._
  */
 object DiscoItemsQuery {
 
-  import Implicits._
+  import CoreExt._
 
   val DISCO_ITEMS_NS = "http://jabber.org/protocol/disco#items"
 

@@ -1,6 +1,5 @@
 package io.backchat.scapulet
 
-import XMPPConstants._
 import java.io.{ File, FileInputStream, InputStream, IOException }
 import java.security._
 import java.security.cert.{ X509Certificate, CertificateException }
@@ -8,10 +7,9 @@ import javax.net.ssl.X509TrustManager
 import Scapulet.TLSConfig
 import java.util.Date
 import akka.actor.ActorSystem
-import Implicits._
 
 trait TLSStanza extends Logging {
-  def startTLS = <starttls xmlns={ TLS_NS }/>
+  def startTLS = <starttls xmlns={ ns.Tls }/>
 
   def processTLS
 }

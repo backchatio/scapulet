@@ -1,88 +1,45 @@
-package com.mojolly.scapulet.stanza
+package io.backchat.scapulet.stanza
 
-import org.scalatest.WordSpec
-import org.scalatest.matchers.MustMatchers
-import io.backchat.scapulet.stanza.Identity
+import org.specs2.Specification
 
-class IdentitySpec extends WordSpec with MustMatchers {
-
-  "An Identity stanza" when {
-
-    "extracting a valid stanza" should {
-
-      "get the category name" in {
-        val stanza = <identity category="pubsub" type="service"/>
-        stanza match {
-          case Identity(category, _, _) => category must be("pubsub")
-          case _ => fail("Could not get the category name")
-        }
-      }
-
-      "get the type name" in {
-        val stanza = <identity category="pubsub" type="service"/>
-        stanza match {
-          case Identity(_, svcType, _) => svcType must be("service")
-          case _ => fail("could not get the type")
-        }
-      }
-
-      "get the name if one is given" in {
-        val stanza = <identity category="pubsub" type="service" name="theName"/>
-        stanza match {
-          case Identity(_, _, Some(nm)) => nm must be("theName")
-          case _ => fail("could not get the name")
-        }
-      }
-
-      "return none for the name if none is given" in {
-        val stanza = <identity category="pubsub" type="service"/>
-        stanza match {
-          case Identity(_, _, nm) => nm must be('empty)
-          case _ => fail("could not get the name")
-        }
-      }
-    }
-
-    "extracting an invalid stanza" should {
-      "not match when no category is given" in {
-        val stanza = <identity type="service" name="theName"/>
-        Identity.unapply(stanza) must be('empty)
-      }
-      "not match when no type is given" in {
-        val stanza = <identity category="pubsub" name="theName"/>
-        Identity.unapply(stanza) must be('empty)
-      }
-      "not match for a different element" in {
-        val stanza = <identity2 category="pubsub" type="service" name="theName"/>
-        Identity.unapply(stanza) must be('empty)
-      }
-    }
-
-    "generating" should {
-
-      "throw an exception when the category is null" in {
-        evaluating { Identity(null, "service") } must produce[Exception]
-      }
-
-      "throw an exception when the category is blank" in {
-        evaluating { Identity("  ", "service") } must produce[Exception]
-      }
-
-      "throw an exception when the type is null" in {
-        evaluating { Identity("pubsub", null) } must produce[Exception]
-      }
-
-      "throw an exception when the type is blank" in {
-        evaluating { Identity("pubsub", "  ") } must produce[Exception]
-      }
-
-      "generate a stanza without a name when none is provided" in {
-        Identity("pubsub", "service") must be(<identity category="pubsub" type="service"/>)
-      }
-
-      "generate a stanza with a name when one is provided" in {
-        Identity("pubsub", "service", Some("blah")) must be(<identity category="pubsub" type="service" name="blah"/>)
-      }
-    }
-  }
+class IdentitySpec extends Specification {
+  def is =
+    "An Identity stanza should" ^
+      "when extracting a valid stanza" ^
+      "get the category and service name" ! {
+        Identity.unapply(<identity category="pubsub" type="service"/>) must beSome(("pubsub", "service", None))
+      } ^
+      "get the name if one is given" ! {
+        Identity.unapply(<identity category="pubsub" type="service" name="theName"/>) must beSome(("pubsub", "service", Some("theName")))
+      } ^ bt ^
+      "when extracting an invalid stanza" ^
+      "not match when no category is given" ! {
+        Identity.unapply(<identity type="service" name="theName"/>) must beNone
+      } ^
+      "not match when no type is given" ! {
+        Identity.unapply(<identity category="pubsub" name="theName"/>) must beNone
+      } ^
+      "not match for a different element" ! {
+        Identity.unapply(<identity2 category="pubsub" type="service" name="theName"/>) must beNone
+      } ^ bt ^
+      "when generating" ^
+      "throw an exception when the category is null" ! {
+        Identity(null, "service") must throwA[Exception]
+      } ^
+      "throw an exception when the category is blank" ! {
+        Identity("  ", "service") must throwA[Exception]
+      } ^
+      "throw an exception when the type is null" ! {
+        Identity("pubsub", null) must throwA[Exception]
+      } ^
+      "throw an exception when the type is blank" ! {
+        Identity("pubsub", "  ") must throwA[Exception]
+      } ^
+      "generate a stanza without a name when none is provided" ! {
+        Identity("pubsub", "service") must ==/(<identity category="pubsub" type="service"/>)
+      } ^
+      "generate a stanza with a name when one is provided" ! {
+        Identity("pubsub", "service", Some("blah")) must ==/(<identity category="pubsub" type="service" name="blah"/>)
+      } ^
+      end
 }

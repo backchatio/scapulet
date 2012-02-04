@@ -16,6 +16,7 @@ scalacOptions ++= Seq("-optimize", "-unchecked", "-deprecation", "-Xcheckinit", 
 autoCompilerPlugins := true
 
 libraryDependencies ++= Seq(
+//  "com.fasterxml" % "aalto-xml" % "0.9.7",
   "commons-lang" % "commons-lang" % "2.5",
   "org.gnu.inet" % "libidn" % "1.15",
   "net.iharder" % "base64" % "2.3.8",
@@ -26,8 +27,7 @@ libraryDependencies ++= Seq(
   compilerPlugin("org.scala-lang.plugins" % "continuations" % "2.9.1"),
   compilerPlugin("org.scala-tools.sxr" % "sxr_2.9.0" % "0.2.7"),
   "junit" % "junit" % "4.10" % "test",
-  "org.specs2" %% "specs2" % "1.7.1" % "test",
-  "org.scalatest" %% "scalatest" % "1.6.1" % "test"
+  "org.specs2" %% "specs2" % "1.7.1" % "test"
 )
 
 homepage := Some(url("https://github.com/mojolly/scapulet"))
@@ -106,3 +106,13 @@ ScalariformKeys.preferences :=
         setPreference(IndentWithTabs, false))
 
 seq(scalariformSettings: _*)
+
+(excludeFilter in ScalariformKeys.format) <<= (excludeFilter) (_ || "*Spec.scala")
+
+testOptions in Test += Tests.Setup( () => System.setProperty("akka.mode", "test") )
+
+testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "console", "junitxml")
+
+testOptions in Test <+= (crossTarget map { ct =>
+ Tests.Setup { () => System.setProperty("specs2.junit.outDir", new File(ct, "specs-reports").getAbsolutePath) }
+})

@@ -5,7 +5,7 @@ import xml._
 
 object Identity {
 
-  import Implicits._
+  import CoreExt._
 
   def apply(category: String, `type`: String, name: Option[String] = None): NodeSeq = {
     require(category.isNotBlank, "You have to provide a category")

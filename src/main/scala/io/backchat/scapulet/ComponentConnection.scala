@@ -11,24 +11,15 @@ import xml._
 import java.net.{ Socket, InetSocketAddress }
 import java.io._
 import org.jboss.netty.buffer.ChannelBuffers
-import StringUtil.{ Utf8, hash }
 import java.util.concurrent.{ TimeUnit, Executors }
-import io.backchat.scapulet.Exceptions.UnauthorizedException
 import akka.actor.{ ActorSystem, ActorRef }
 
 object ComponentConnection {
 
-  private[scapulet] object XMPPStrings {
-    val NS_ACCEPT = "jabber:component:accept"
-    val NS_CONNECT = "jabber:component:connect"
-    val NS_STREAM = "http://etherx.jabber.org/streams"
+  object OpenStream {
     val OPEN_STREAM_FMT = """<stream:stream xmlns="%s" xmlns:stream="%s" to="%s" >"""
-
-    def makeStreamMessage(jid: String, ns: String = NS_ACCEPT) =
-      OPEN_STREAM_FMT.format(ns, NS_STREAM, jid)
+    def apply(jid: String, nsd: String = ns.component.Accept) = OPEN_STREAM_FMT.format(nsd, ns.Stream, jid)
   }
-
-  import XMPPStrings._
 
   object StreamResponse {
     private val streamRegex = """(<\?[^?]>)?<stream:stream[^>]*>""".r
@@ -245,7 +236,7 @@ object ComponentConnection {
     override def channelConnected(ctx: ChannelHandlerContext, e: ChannelStateEvent) {
       if (e.getState == ChannelState.CONNECTED) {
         logger info ("Connected to server, authenticating...")
-        val buff = ChannelBuffers.copiedBuffer(makeStreamMessage(connection.address), Utf8)
+        val buff = ChannelBuffers.copiedBuffer(OpenStream(connection.address), Utf8)
         e.getChannel.write(buff)
 
       }

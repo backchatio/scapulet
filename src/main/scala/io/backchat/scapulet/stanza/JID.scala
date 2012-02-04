@@ -9,3 +9,4 @@ object JID {
     Some((parts.head, parts.lastOption))
   } else Some((jid, None))
 }
+

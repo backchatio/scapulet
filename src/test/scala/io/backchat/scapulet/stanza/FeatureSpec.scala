@@ -1,40 +1,26 @@
-package com.mojolly.scapulet.stanza
+package io.backchat.scapulet.stanza
 
-import org.scalatest.WordSpec
-import org.scalatest.matchers.MustMatchers
-import io.backchat.scapulet.stanza.Feature
+import org.specs2.Specification
 
-class FeatureSpec extends WordSpec with MustMatchers {
-
-  "A feature" when {
-
-    "extracting" should {
-
-      "get the feature name for a valid stanza" in {
-        val stanza = <feature var="hello world"/>
-        stanza match {
-          case Feature(nm) => nm must equal("hello world")
-          case _ => fail("Couldn't match a valid stanza")
-        }
-      }
-
-      "not match when the stanza is not a feature with a name" in {
-        val stanza = <feature/>
-        Feature.unapply(stanza) must be('empty)
-      }
-    }
-
-    "generating" should {
-
-      "throw an exception when the name is null" in {
-        evaluating { Feature(null) } must produce[Exception]
-      }
-      "throw an exception when the name is blank" in {
-        evaluating { Feature("  ") } must produce[Exception]
-      }
-      "generate a nodeseq when the name is provided" in {
-        Feature("hello world") must be(<feature var="hello world"/>)
-      }
-    }
-  }
+class FeatureSpec extends Specification {
+  def is =
+    "A feature should" ^
+      "when extracting" ^
+      "get the feature name for a valid stanza" ! {
+        Feature.unapply(<feature var="hello world"/>) must beSome("hello world")
+      } ^
+      "not match when the stanza is not a feature with a name" ! {
+        Feature.unapply(<feature/>) must beNone
+      } ^ bt ^
+      "when generating" ^
+      "throw an exception when the name is null" ! {
+        Feature(null) must throwA[Exception]
+      } ^
+      "throw an exception when the name is blank" ! {
+        Feature("  ") must throwA[Exception]
+      } ^
+      "generate a nodeseq when the name is provided" ! {
+        Feature("hello world") must ==/(<feature var="hello world"/>)
+      } ^
+      end
 }

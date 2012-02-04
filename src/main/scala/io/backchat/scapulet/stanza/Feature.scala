@@ -5,7 +5,7 @@ import xml.{ Elem, Node, NodeSeq }
 
 object Feature {
 
-  import Implicits._
+  import CoreExt._
 
   def apply(name: String): NodeSeq = {
     require(name.isNotBlank, "The name cannot be blank")

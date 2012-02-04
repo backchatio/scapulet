@@ -5,7 +5,7 @@ import xml._
 
 object DiscoInfoQuery {
 
-  import Implicits._
+  import CoreExt._
 
   val DISCO_INFO_NS = "http://jabber.org/protocol/disco#info"
 

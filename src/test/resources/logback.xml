@@ -28,7 +28,7 @@
     </rollingPolicy>
   </appender>
   <logger name="se.scalablesolutions" level="INFO"/>
-  <logger name="com.mojolly" level="DEBUG"/>
+  <logger name="io.backchat" level="DEBUG"/>
   <root level="INFO">
     <appender-ref ref="stdout"/>
     <appender-ref ref="R"/>

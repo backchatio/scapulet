@@ -2,7 +2,6 @@ package io.backchat.scapulet
 package stanza
 
 import scala.xml._
-import XMPPConstants._
 
 object StreamFeatures {
 
@@ -11,24 +10,19 @@ object StreamFeatures {
     compressionMethods: Seq[String] = Nil,
     extraFeatures: Seq[Node] = Seq.empty) = {
     <stream:features>
-      <starttls xmlns={ TLS_NS }/>{ addCompressionMethods(compressionMethods) }<mechanisms xmlns={ SASL_NS }>
-                                                                                 {
-                                                                                   SASLMechanisms.map(m => <mechanism>
-                                                                                                             { m }
-                                                                                                           </mechanism>)
-                                                                                 }
-                                                                               </mechanisms>{ extraFeatures }
+      <starttls xmlns={ ns.Tls }/>
+      { addCompressionMethods(compressionMethods) }
+      <mechanisms xmlns={ ns.Sasl }>
+        { SASLMechanisms.map(m => <mechanism>{ m }</mechanism>) }
+      </mechanisms>
+      { extraFeatures }
     </stream:features>.map(Utility.trim(_)).theSeq.head
   }
 
   private def addCompressionMethods(methods: Seq[String]): NodeSeq = {
     if (!methods.isEmpty) {
-      <compression xmlns={ COMPRESSION_NS }>
-        {
-          methods.map(m => <method>
-                             { m }
-                           </method>)
-        }
+      <compression xmlns={ ns.Compression }>
+        { methods.map(m => <method>{ m }</method>) }
       </compression>
     } else {
       Nil
@@ -41,6 +35,7 @@ object StreamFeatures {
       val mechanisms = (feat \\ "mechanism").map(_.text)
       val compressionMethods = (feat \\ "methods").map(_.text)
       val others = ch.filterNot(n => ("starttls" :: "mechanisms" :: Nil).contains(n.label))
+
       Some((tls, mechanisms, NodeSeq.fromSeq(others)))
     }
     case _ => None

@@ -5,7 +5,7 @@ import xml._
 
 object DiscoItem {
 
-  import Implicits._
+  import CoreExt._
 
   def apply(jid: String, name: Option[String] = None, node: Option[String] = None) = {
     require(jid.isNotBlank, "You need to provide a jid for this disco item")

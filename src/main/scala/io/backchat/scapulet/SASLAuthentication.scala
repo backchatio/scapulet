@@ -1,14 +1,11 @@
 package io.backchat.scapulet
 
 import xml.{ Node, XML }
-import XMPPConstants._
 import javax.security.sasl._
 import javax.security.auth.callback._
 import collection.JavaConversions._
 import io.backchat.scapulet.Scapulet.ScapuletConnection
-import Implicits._
 import net.iharder.Base64
-import io.backchat.scapulet.Exceptions.SASLAuthenticationFailed
 
 object SASLAuthentication {
 
@@ -16,7 +13,7 @@ object SASLAuthentication {
 
   abstract class Failure(condition: String) extends SASLFailure {
     def apply() = {
-      <failure xmlns={ SASL_NS }>
+      <failure xmlns={ ns.Sasl }>
         { XML.loadString("<%s />" format condition) }
       </failure>
     }
@@ -51,7 +48,7 @@ object SASLAuthentication {
   }
 
   object Success {
-    def apply(data: String) = <success xmlns={ SASL_NS }>
+    def apply(data: String) = <success xmlns={ ns.Sasl }>
                                 { data }
                               </success>
 
@@ -62,7 +59,7 @@ object SASLAuthentication {
   }
 
   object Challenge {
-    def apply(data: String) = <challenge xmlns={ SASL_NS }>
+    def apply(data: String) = <challenge xmlns={ ns.Sasl }>
                                 { data }
                               </challenge>
 
@@ -74,7 +71,7 @@ object SASLAuthentication {
 
   object Response {
     def apply(data: String) = {
-      <response xmlns={ SASL_NS }>
+      <response xmlns={ ns.Sasl }>
         { data }
       </response>
     }
@@ -124,7 +121,7 @@ object SASLAuthentication {
       } catch {
         case e: SaslException => throw new SASLAuthenticationFailed(e)
       }
-      connection.write(<auth mechanism={ name } xmlns={ SASL_NS }>
+      connection.write(<auth mechanism={ name } xmlns={ ns.Sasl }>
                          { authText }
                        </auth>)
     }

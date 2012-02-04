@@ -6,7 +6,7 @@ import xml._
 trait ReplyMethods {
   self: ScapuletHandler =>
 
-  import Implicits._
+  import CoreExt._
 
   /**
    * Creates an info query reply stanza, additional content can be added in the curry function

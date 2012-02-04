@@ -2,8 +2,7 @@ package io.backchat.scapulet
 package stanza
 
 import xml._
-import XMPPConstants._
-import Implicits._
+import CoreExt._
 
 object StreamErrors {
 
@@ -14,8 +13,8 @@ object StreamErrors {
 
     def apply(text: Option[String] = None, applicationCondition: Seq[Node] = Seq.empty) = {
       (<stream:error>
-         { XML.loadString("<%s xmlns=\"%s\" />".format(condition, XMPP_STREAMS_NS)) }{
-           text.map(t => <text xmlns={ XMPP_STREAMS_NS }>
+         { XML.loadString("<%s xmlns=\"%s\" />".format(condition, ns.XmppStream)) }{
+           text.map(t => <text xmlns={ ns.XmppStream }>
                            { t }
                          </text>) getOrElse Nil
          }{ applicationCondition }

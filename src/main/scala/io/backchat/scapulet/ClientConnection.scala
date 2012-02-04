@@ -3,8 +3,6 @@ package io.backchat.scapulet
 import java.io._
 import java.net.{ Socket }
 import xml._
-import StringUtil._
-import XMPPConstants._
 import akka.actor.{ ActorSystem, ActorRef }
 import io.backchat.scapulet.Scapulet.{ ScapuletConnection, ClientConfig }
 
@@ -106,7 +104,7 @@ object ClientConnection {
       from: Option[String] = None,
       id: Option[String] = None,
       xmlLang: Option[String] = Some("en"),
-      xmlns: Option[String] = Some(CLIENT_NS),
+      xmlns: Option[String] = Some(ns.Client),
       version: Option[String] = Some("1.0")) = {
       val sb = new StringBuffer
       sb.append("""<stream:stream xmlns:stream="http://etherx.jabber.org/streams" """)

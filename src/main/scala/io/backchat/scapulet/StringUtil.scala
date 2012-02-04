@@ -5,8 +5,6 @@ import java.io.UnsupportedEncodingException
 import java.nio.charset.Charset
 
 object StringUtil {
-  val UTF_8 = "UTF-8"
-  val Utf8 = Charset.forName(UTF_8)
 
   private val digest = try {
     MessageDigest.getInstance("SHA-1")
