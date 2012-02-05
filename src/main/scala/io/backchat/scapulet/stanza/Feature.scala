@@ -8,7 +8,7 @@ object Feature {
   import CoreExt._
 
   def apply(name: String): NodeSeq = {
-    require(name.isNotBlank, "The name cannot be blank")
+    require(name.nonBlank, "The name cannot be blank")
     <feature var={ name }/>
   }
 

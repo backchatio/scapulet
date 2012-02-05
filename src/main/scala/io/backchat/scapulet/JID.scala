@@ -1,5 +1,4 @@
 package io.backchat.scapulet
-package stanza
 
 object JID {
   def apply(bareJid: String, resource: String) = "%s/%s".format(bareJid, resource)

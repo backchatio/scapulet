@@ -9,6 +9,7 @@ object ScapuletExtension extends ExtensionId[ScapuletExtension] with ExtensionId
 
   class ScapuletSettings(system: ExtendedActorSystem) {
 
+    val eventStream = new StanzaEventBus
   }
 }
 class ScapuletExtension(system: ExtendedActorSystem) extends Extension {

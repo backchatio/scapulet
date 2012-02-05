@@ -1,6 +1,5 @@
 package io.backchat.scapulet
 
-import stanza.JID
 import org.specs2.Specification
 
 class StringUtilSpec extends Specification {

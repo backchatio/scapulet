@@ -5,7 +5,8 @@ import javax.security.sasl._
 import javax.security.auth.callback._
 import collection.JavaConversions._
 import io.backchat.scapulet.Scapulet.ScapuletConnection
-import net.iharder.Base64
+import org.jboss.netty.handler.codec.base64.Base64
+import org.jboss.netty.buffer.ChannelBuffers
 
 object SASLAuthentication {
 
@@ -116,7 +117,7 @@ object SASLAuthentication {
       try {
         if (saslClient.hasInitialResponse) {
           val resp = saslClient.evaluateChallenge(new Array[Byte](0))
-          authText = Base64.encodeBytes(resp)
+          authText = resp.asBase64String
         }
       } catch {
         case e: SaslException => throw new SASLAuthenticationFailed(e)
@@ -127,13 +128,13 @@ object SASLAuthentication {
     }
 
     def onServerChallenge(challenge: String) {
-      val response = if (challenge.isNotNull) {
-        saslClient.evaluateChallenge(Base64.decode(challenge))
+      val response = if (challenge.nonBlank) {
+        saslClient.evaluateChallenge(challenge.base64Decoded)
       } else {
         saslClient.evaluateChallenge(new Array[Byte](0))
       }
 
-      val stanza = if (response == null) Response("") else Response(Base64.encodeBytes(response))
+      val stanza = if (response == null) Response("") else Response(response.asBase64String)
       connection.write(stanza)
     }
 

@@ -8,8 +8,8 @@ object Identity {
   import CoreExt._
 
   def apply(category: String, `type`: String, name: Option[String] = None): NodeSeq = {
-    require(category.isNotBlank, "You have to provide a category")
-    require(`type`.isNotBlank, "You have to provide a type")
+    require(category.nonBlank, "You have to provide a category")
+    require(`type`.nonBlank, "You have to provide a type")
 
     name match {
       case Some(nm) => <identity category={ category } type={ `type` } name={ nm }/>

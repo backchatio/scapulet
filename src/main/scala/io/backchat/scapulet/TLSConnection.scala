@@ -39,14 +39,14 @@ class TLSConnection(implicit protected val system: ActorSystem) extends TLSStanz
   }
 
   def keystorePath = {
-    if (config.keystorePath.isBlank) {
+    if (config.keystorePath.blank) {
       _config = _config.copy(keystorePath = System.getProperty("javax.net.ssl.keyStore"))
     }
     config.keystorePath
   }
 
   def trustStorePath = {
-    if (config.truststorePath.isBlank) {
+    if (config.truststorePath.blank) {
       val sb = new StringBuilder
       sb append (System getProperty "java.home") append File.separator append "lib"
       sb append File.separator append "security" append File.separator append "cacerts"

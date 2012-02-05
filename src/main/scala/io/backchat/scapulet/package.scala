@@ -1,8 +1,9 @@
 package io.backchat
 
 import java.nio.charset.Charset
-import scapulet.CoreExt.{ AllowAddingAttributes, JidString }
+import scapulet.CoreExt.{ ScapuletByteArray, AllowAddingAttributes, JidString }
 import xml.Elem
+import akka.actor.ActorSystem
 
 package object scapulet {
 
@@ -34,5 +35,8 @@ package object scapulet {
   private[scapulet] implicit def addAttributesFromMap(elem: Elem) = new AllowAddingAttributes(elem)
 
   implicit def string2jidString(s: String) = new JidString(s)
+  implicit def byteArr2ScapuletByteArr(s: Array[Byte]) = new ScapuletByteArray(s)
+
+  implicit def systemAsScapuletExtension(system: ActorSystem) = system extension ScapuletExtension
 
 }

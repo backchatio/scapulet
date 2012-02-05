@@ -9,7 +9,7 @@ object StreamErrors {
   sealed trait XMPPStreamError
 
   class StreamError(condition: String) extends XMPPStreamError {
-    require(condition.isNotBlank, "You need to specify a condition")
+    require(condition.nonBlank, "You need to specify a condition")
 
     def apply(text: Option[String] = None, applicationCondition: Seq[Node] = Seq.empty) = {
       (<stream:error>
@@ -24,7 +24,7 @@ object StreamErrors {
     def unapply(stanza: Node) = stanza.map(Utility.trim(_)).theSeq.head match {
       case err @ <stream:error>{ ch @ _* }</stream:error> if !(err \\ condition).isEmpty => {
         val txt = (err \ "text").text
-        val text = if (txt.isNotBlank) Some(txt) else None
+        val text = if (txt.nonBlank) Some(txt) else None
         val appCond = ch.filterNot(n => (condition :: "text" :: Nil).contains(n.label))
         val c = NodeSeq.fromSeq(appCond)
         Some((text, c))

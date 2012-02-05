@@ -16,10 +16,8 @@ scalacOptions ++= Seq("-optimize", "-unchecked", "-deprecation", "-Xcheckinit", 
 autoCompilerPlugins := true
 
 libraryDependencies ++= Seq(
-//  "com.fasterxml" % "aalto-xml" % "0.9.7",
-  "commons-lang" % "commons-lang" % "2.5",
+  "org.codehaus.woodstox" % "woodstox-core-asl" % "4.1.2",
   "org.gnu.inet" % "libidn" % "1.15",
-  "net.iharder" % "base64" % "2.3.8",
   "com.google.guava" % "guava" % "10.0.1",
   "com.typesafe.akka" % "akka-file-mailbox" % "2.0-M3",
   "com.typesafe.akka" % "akka-slf4j" % "2.0-M3" % "provided",
@@ -95,6 +93,8 @@ publishArtifact in Test := false
 
 pomIncludeRepository := { x => false }
 
+seq(scalariformSettings: _*)
+
 ScalariformKeys.preferences :=
   (FormattingPreferences()
         setPreference(IndentSpaces, 2)
@@ -104,8 +104,6 @@ ScalariformKeys.preferences :=
         setPreference(RewriteArrowSymbols, true)
         setPreference(PreserveSpaceBeforeArguments, true)
         setPreference(IndentWithTabs, false))
-
-seq(scalariformSettings: _*)
 
 (excludeFilter in ScalariformKeys.format) <<= (excludeFilter) (_ || "*Spec.scala")
 
