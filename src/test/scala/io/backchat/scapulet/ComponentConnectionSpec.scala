@@ -5,9 +5,10 @@ import org.specs2.Specification
 
 class ComponentConnectionSpec extends Specification {
   def is =
-    "A Component connection, when extracting, should" ^
-      "find an id and address in a valid stream response" ! validStreamResponse ^
-      "find the error message in an error response" ! invalidStreamResponse ^
+    "A Component connection should" ^
+      "when extracting" ^
+        "find an id and address in a valid stream response" ! validStreamResponse ^
+        "find the error message in an error response" ! invalidStreamResponse ^
       end
 
   def validStreamResponse = {

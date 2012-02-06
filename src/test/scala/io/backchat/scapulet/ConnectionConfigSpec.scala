@@ -1,6 +1,5 @@
 package io.backchat.scapulet
 
-import Scapulet.ConnectionConfig
 import org.specs2.Specification
 
 class ConnectionConfigSpec extends Specification {

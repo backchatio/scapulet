@@ -2,30 +2,50 @@ package io.backchat.scapulet
 
 import akka.util.duration._
 import xml.{ Node, NodeSeq }
-import akka.actor.ActorRef
 import akka.util.Duration
 import java.net.InetSocketAddress
+import akka.actor.{ Actor, ActorRef }
+import akka.event.LoggingAdapter
+import com.typesafe.config.Config
+import java.util.concurrent.TimeUnit
 
-object Scapulet {
-
-  case class ConnectionConfig(
-      userName: String,
-      password: String,
-      host: String,
-      port: Int,
-      virtualHost: Option[String] = None,
-      connectionTimeout: Duration = 10 seconds,
-      reconnectDelay: Duration = 5 seconds,
-      connectionCallback: Option[ActorRef] = None,
-      maxThreads: Int = 25) extends NotNull {
-    def domain = virtualHost getOrElse host
-
-    def address = "%s.%s".format(userName, domain)
-
-    def asHexSecret(id: String) = StringUtil.hash("%s%s".format(id, password))
-
-    def socketAddress = new InetSocketAddress(host, port)
+object ConnectionConfig {
+  def apply(config: Config): ConnectionConfig = {
+    ConnectionConfig(
+      config.getString("userName"),
+      config.getString("password"),
+      config.getString("host"),
+      config.getInt("port"),
+      config.getString("virtualHost").blankOpt,
+      Duration(config.getMilliseconds("connectionTimeout"), TimeUnit.MILLISECONDS),
+      Duration(config.getMilliseconds("reconnectDelay"), TimeUnit.MILLISECONDS),
+      None,
+      config.getInt("maxThreads"))
   }
+}
+case class ConnectionConfig(
+    userName: String,
+    password: String,
+    host: String,
+    port: Int,
+    virtualHost: Option[String] = None,
+    connectionTimeout: Duration = 10 seconds,
+    reconnectDelay: Duration = 5 seconds,
+    connectionCallback: Option[ActorRef] = None,
+    maxThreads: Int = 25) extends NotNull {
+  def domain = virtualHost getOrElse host
+
+  def address = "%s.%s".format(userName, domain)
+
+  def asHexSecret(id: String) = StringUtil.hash("%s%s".format(id, password))
+
+  def socketAddress = new InetSocketAddress(host, port)
+}
+
+trait ScapuletConnectionActor extends Actor {
+  @transient lazy val logger: LoggingAdapter = akka.event.Logging(context.system, this)
+}
+object Scapulet {
 
   case class TLSConfig(
     keystorePath: String = "",
@@ -80,6 +100,7 @@ object Scapulet {
   case object Connected extends ComponentConnectionMessage
 
   case object Reconnecting extends ComponentConnectionMessage
+  private[scapulet] case object Reconnect extends ComponentConnectionMessage
 
   case object Disconnected extends ComponentConnectionMessage
 
@@ -130,8 +151,7 @@ object Scapulet {
       System.getProperty("os.version"),
       System.getProperty("java.vm.name"),
       System.getProperty("java.version"),
-      System.getProperty("java.vm.vendor")
-    )
+      System.getProperty("java.vm.vendor"))
   }
 
 }

@@ -3,13 +3,13 @@ package io.backchat.scapulet
 import akka.event.{ ActorEventBus, EventBus }
 import collection.JavaConversions._
 import com.google.common.collect.MapMaker
-import xml.{ Elem, Node }
+import xml.{ NodeSeq, Elem, Node }
 
 object StanzaEventBus {
 
   trait StanzaPredicate {
     def name: String
-    def apply(evt: Elem): Boolean
+    def apply(evt: NodeSeq): Boolean
     override def equals(obj: Any) = obj match {
       case pred: StanzaPredicate ⇒ pred.name == name
       case _                     ⇒ false
@@ -18,20 +18,20 @@ object StanzaEventBus {
 
   object AllStanzas extends StanzaPredicate {
     val name = "all-stanzas"
-    def apply(evt: Elem) = true
+    def apply(evt: NodeSeq) = true
   }
 
   class CompositePredicate(predicate: StanzaPredicate, predicates: StanzaPredicate*) extends StanzaPredicate {
     private val allPredicates = Vector((predicate +: predicates): _*)
     val name = allPredicates sortBy (_.name) mkString "::"
 
-    def apply(evt: Elem) = allPredicates forall (_ apply evt)
+    def apply(evt: NodeSeq) = allPredicates forall (_ apply evt)
   }
 
   private val mapMaker = new MapMaker
 }
 class StanzaEventBus extends EventBus with ActorEventBus {
-  type Event = Elem
+  type Event = NodeSeq
   type Classifier = StanzaEventBus.StanzaPredicate
 
   private val subscriptions = StanzaEventBus.mapMaker.makeMap[Classifier, Set[Subscriber]].withDefaultValue(Set.empty[Subscriber])
