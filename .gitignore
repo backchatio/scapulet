@@ -57,3 +57,6 @@ jrebel.lic
 
 target
 .idea
+.settings
+.classpath
+.project
