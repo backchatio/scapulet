@@ -70,7 +70,7 @@ object ComponentConnection {
                 e.getChannel.write(buff)
               }
               case source ⇒ {
-                ReadXml(source) foreach {
+                ReadStanza(source) foreach {
                   case <handshake/> ⇒ {
                     logger info "Established connection to [%s:%d]".format(config.host, config.port)
                     actor ! Scapulet.Connected

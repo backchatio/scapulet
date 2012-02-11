@@ -46,9 +46,9 @@ package object scapulet {
     def actorHandle = Option(ctx.getAttachment) map (_.asInstanceOf[ActorRef])
   }
 
-  implicit def channelHandlerContextWithActor(ctx: ChannelHandlerContext) = new ScapuletChannelHandlerContext(ctx)
+  private[scapulet] implicit def channelHandlerContextWithActor(ctx: ChannelHandlerContext) = new ScapuletChannelHandlerContext(ctx)
 
-  object ReadXml {
+  private[scapulet] object ReadStanza {
     def apply(source: String) = {
       (catching(classOf[SAXParseException]) withApply wrap(source)_) {
         List(XML.loadString(source))
