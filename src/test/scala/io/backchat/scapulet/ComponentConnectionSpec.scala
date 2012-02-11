@@ -9,6 +9,11 @@ class ComponentConnectionSpec extends Specification {
       "when extracting" ^
         "find an id and address in a valid stream response" ! validStreamResponse ^
         "find the error message in an error response" ! invalidStreamResponse ^
+      "when connecting" ^
+        "open a stream by sending the header" ! pending ^
+        "reply to stream header with handshake" ! pending ^
+        "notify listener of connected" ! pending ^
+        "notify listener of connection failure" ! pending ^
       end
 
   def validStreamResponse = {
@@ -20,6 +25,8 @@ class ComponentConnectionSpec extends Specification {
     val errorResp = "<stream:error><not-authorized xmlns='urn:ietf:params:xml:ns:xmpp-streams'/><text xmlns='urn:ietf:params:xml:ns:xmpp-streams' xml:lang='en'>Invalid Handshake</text></stream:error></stream:stream>"
     AuthenticationFailureResponse.unapply(errorResp) must beSome("Invalid Handshake")
   }
+
+
 
 }
 

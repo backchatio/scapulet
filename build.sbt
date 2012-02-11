@@ -28,6 +28,8 @@ libraryDependencies ++= Seq(
   "org.specs2" %% "specs2" % "1.7.1" % "test"
 )
 
+resolvers += "Akka Releases" at "http://akka.io/releases/"
+
 homepage := Some(url("https://github.com/mojolly/scapulet"))
 
 startYear := Some(2010)
