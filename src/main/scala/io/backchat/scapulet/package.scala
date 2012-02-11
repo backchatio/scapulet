@@ -2,8 +2,11 @@ package io.backchat
 
 import java.nio.charset.Charset
 import scapulet.CoreExt.{ ScapuletByteArray, AllowAddingAttributes, JidString }
-import xml.Elem
-import akka.actor.ActorSystem
+import org.jboss.netty.channel.ChannelHandlerContext
+import akka.actor.{ ActorRef, ActorSystem }
+import org.xml.sax.SAXParseException
+import xml._
+import util.control.Exception._
 
 package object scapulet {
 
@@ -38,5 +41,21 @@ package object scapulet {
   implicit def byteArr2ScapuletByteArr(s: Array[Byte]) = new ScapuletByteArray(s)
 
   implicit def systemAsScapuletExtension(system: ActorSystem) = system extension ScapuletExtension
+
+  class ScapuletChannelHandlerContext(ctx: ChannelHandlerContext) {
+    def actorHandle = Option(ctx.getAttachment) map (_.asInstanceOf[ActorRef])
+  }
+
+  implicit def channelHandlerContextWithActor(ctx: ChannelHandlerContext) = new ScapuletChannelHandlerContext(ctx)
+
+  object ReadXml {
+    def apply(source: String) = {
+      (catching(classOf[SAXParseException]) withApply wrap(source)_) {
+        List(XML.loadString(source))
+      }
+    }
+
+    private def wrap(source: String)(th: Throwable) = XML.loadString("<wrapper>%s</wrapper>".format(source)).child.toList
+  }
 
 }

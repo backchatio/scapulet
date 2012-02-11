@@ -1,8 +1,7 @@
 package io.backchat.scapulet
 
-import java.net.{SocketException, ConnectException, Socket, ServerSocket}
+import java.net.{ SocketException, ConnectException, Socket, ServerSocket }
 import util.Random
-
 
 object FreePort {
 

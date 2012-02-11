@@ -1,11 +1,6 @@
 package io.backchat.scapulet
 
-import org.xml.sax.SAXParseException
 import util.control.Exception._
-import java.util.concurrent.{ ThreadFactory, Executors }
-import java.util.concurrent.atomic.AtomicInteger
-import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory
-import org.jboss.netty.bootstrap.ClientBootstrap
 import org.jboss.netty.channel._
 import akka.actor._
 import org.jboss.netty.buffer.{ ChannelBuffers, ChannelBuffer }
@@ -39,22 +34,6 @@ object ComponentConnection {
       }
       case _ ⇒ None
     }
-  }
-
-  class ScapuletChannelHandlerContext(ctx: ChannelHandlerContext) {
-    def actorHandle = Option(ctx.getAttachment) map (_.asInstanceOf[ActorRef])
-  }
-
-  implicit def channelHandlerContextWithActor(ctx: ChannelHandlerContext) = new ScapuletChannelHandlerContext(ctx)
-
-  object ReadXml {
-    def apply(source: String) = {
-      (catching(classOf[SAXParseException]) withApply wrap(source)_) {
-        List(XML.loadString(source))
-      }
-    }
-
-    private def wrap(source: String)(th: Throwable) = XML.loadString("<wrapper>%s</wrapper>".format(source)).child.toList
   }
 
   class ComponentConnectionHandler(config: ConnectionConfig)(implicit protected val system: ActorSystem, actor: ActorRef) extends SimpleChannelUpstreamHandler with Logging {
@@ -116,94 +95,13 @@ object ComponentConnection {
       logger.error(th, "Unexpected exception in component connection [{}]", config.address)
     }
   }
-
-  private val threadCounter = new AtomicInteger(0)
-
-  private def threadFactory(name: String) = new ThreadFactory {
-    def newThread(r: Runnable) = {
-      val t = new Thread(r)
-      t.setName("component-connection-%s-%d".format(name, threadCounter.incrementAndGet()))
-      if (t.isDaemon)
-        t.setDaemon(false)
-      if (t.getPriority != Thread.NORM_PRIORITY)
-        t.setPriority(Thread.NORM_PRIORITY)
-      t
-    }
-  }
-
-  class NettyClientConnection(name: String, config: ConnectionConfig)(implicit actor: ActorRef, context: ActorContext) extends Logging {
-
-    protected implicit val system = context.system
-
-    private val threadFactory = ComponentConnection.threadFactory(name)
-    private val worker = Executors.newCachedThreadPool(threadFactory)
-    private val boss = Executors.newCachedThreadPool(threadFactory)
-    private val channelFactory = new NioClientSocketChannelFactory(boss, worker)
-
-    private val bootstrap = new ClientBootstrap(channelFactory)
-
-    val serverAddress = config.socketAddress
-
-    bootstrap.setPipelineFactory(new ChannelPipelineFactory {
-      def getPipeline = Channels.pipeline(new ComponentConnectionHandler(config))
-    })
-    bootstrap.setOption("connectTimeoutMillis", config.connectionTimeout.toMillis)
-    bootstrap.setOption("tcpNoDelay", true)
-    bootstrap.setOption("keepAlive", true)
-
-    private var _connection: ChannelFuture = _
-
-    def connect() {
-      if (!isConnected) internalConnect("Connecting")
-    }
-
-    def reconnect() {
-      if (isConnected) _connection.getChannel.disconnect().awaitUninterruptibly()
-      internalConnect("Reconnecting")
-    }
-
-    def isConnected = _connection != null && !_connection.isDone
-
-    def disconnect() {
-      _connection.getChannel.close().awaitUninterruptibly()
-      bootstrap.releaseExternalResources()
-    }
-
-    def write(xml: NodeSeq) {
-      val txt = xml.map(Utility.trimProper _).toString
-      val buff = ChannelBuffers.copiedBuffer(txt, Utf8)
-      val writeFuture = _connection.getChannel.write(buff)
-      writeFuture.addListener(new ChannelFutureListener {
-        def operationComplete(future: ChannelFuture) {
-          if (!future.isSuccess) {
-            logger error "Failed to send: %s".format(xml)
-          }
-        }
-      })
-    }
-
-    private def internalConnect(phase: String) {
-      _connection = bootstrap connect serverAddress
-      logger info "%s to XMPP server at [%s:%s]".format(phase, config.host, config.port)
-      _connection.awaitUninterruptibly
-      logger debug "The succeeded? %s".format(_connection.isDone)
-      if (_connection.isCancelled) {
-        logger info "Connection cancelled by user, exiting."
-        context stop actor
-      }
-      if (!_connection.isSuccess) {
-        logger.error(_connection.getCause, "XMPP connection has failed, trying to reconnect in %s seconds.".format(config.reconnectDelay.toSeconds))
-      }
-    }
-
-  }
 }
 class ComponentConnection extends ScapuletConnectionActor {
 
-  import ComponentConnection.NettyClientConnection
+  import ComponentConnection.ComponentConnectionHandler
   val config = context.system.scapulet.components(self.path.name)
 
-  private var connection: NettyClientConnection = null
+  private var connection: NettyClient = null
 
   override def preStart() {
     self ! Scapulet.Connect
@@ -224,7 +122,7 @@ class ComponentConnection extends ScapuletConnectionActor {
     case Scapulet.Reconnect ⇒ connection.reconnect()
     case Scapulet.Connect ⇒ {
       implicit val system = context.system
-      if (connection == null) connection = new NettyClientConnection(self.path.name, config)
+      if (connection == null) connection = new NettyClient(config, Channels.pipeline(new ComponentConnectionHandler(config)))
       connection.connect()
     }
   }
