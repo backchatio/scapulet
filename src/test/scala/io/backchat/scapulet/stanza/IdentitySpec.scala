@@ -36,10 +36,10 @@ class IdentitySpec extends Specification {
         Identity("pubsub", "  ") must throwA[Exception]
       } ^
       "generate a stanza without a name when none is provided" ! {
-        Identity("pubsub", "service") must ==/(<identity category="pubsub" type="service"/>)
+        Identity("pubsub", "service").toXml must ==/(<identity category="pubsub" type="service"/>)
       } ^
       "generate a stanza with a name when one is provided" ! {
-        Identity("pubsub", "service", Some("blah")) must ==/(<identity category="pubsub" type="service" name="blah"/>)
+        Identity("pubsub", "service", Some("blah")).toXml must ==/(<identity category="pubsub" type="service" name="blah"/>)
       } ^
       end
 }

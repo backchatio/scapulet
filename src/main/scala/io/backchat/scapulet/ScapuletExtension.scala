@@ -55,17 +55,17 @@ object ScapuletExtension extends ExtensionId[ScapuletExtension] with ExtensionId
     import akka.pattern.ask
     implicit private val timeout = system.settings.ActorTimeout
     private val registration = ComponentConnection.RegisterHandler
-    def registerHandler(name: String, predicate: Stanza.Predicate, handler: ⇒ ScapuletHandler): ActorRef = {
-      Await.result((connection ? registration(predicate, Props(handler), name)).mapTo[ActorRef], timeout.duration)
-    }
-
-    def registerHandler(name: String, handle: akka.actor.Actor.Receive): ActorRef = {
-      val predicate = Stanza.matching(name, { case x ⇒ handle.isDefinedAt(x) })
-      val handler = () ⇒ new ScapuletHandler {
-        protected def handleStanza = handle
-      }
-      registerHandler(name, predicate, handler())
-    }
+    //    def registerHandler(name: String, predicate: Stanza.Predicate, handler: ⇒ ScapuletHandler): ActorRef = {
+    //      Await.result((connection ? registration(predicate, Props(handler), name)).mapTo[ActorRef], timeout.duration)
+    //    }
+    //
+    //    def registerHandler(name: String, handle: akka.actor.Actor.Receive): ActorRef = {
+    //      val predicate = Stanza.matching(name, { case x ⇒ handle.isDefinedAt(x) })
+    //      val handler = () ⇒ new ScapuletHandler {
+    //        protected def handleStanza = handle
+    //      }
+    //      registerHandler(name, predicate, handler())
+    //    }
   }
 
   class ScapuletExtension(system: ExtendedActorSystem) {

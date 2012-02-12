@@ -7,7 +7,7 @@ class FeatureSpec extends Specification {
     "A feature should" ^
       "when extracting" ^
       "get the feature name for a valid stanza" ! {
-        Feature.unapply(<feature var="hello world"/>) must beSome("hello world")
+        Feature.unapply(<feature var="hello world"/>) must beSome(("hello world"))
       } ^
       "not match when the stanza is not a feature with a name" ! {
         Feature.unapply(<feature/>) must beNone
@@ -20,7 +20,7 @@ class FeatureSpec extends Specification {
         Feature("  ") must throwA[Exception]
       } ^
       "generate a nodeseq when the name is provided" ! {
-        Feature("hello world") must ==/(<feature var="hello world"/>)
+        Feature("hello world").toXml must ==/(<feature var="hello world"/>)
       } ^
       end
 }
