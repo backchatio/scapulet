@@ -16,9 +16,8 @@ scalacOptions ++= Seq("-optimize", "-unchecked", "-deprecation", "-Xcheckinit", 
 autoCompilerPlugins := true
 
 libraryDependencies ++= Seq(
-  "org.codehaus.woodstox" % "woodstox-core-asl" % "4.1.2",
   "org.gnu.inet" % "libidn" % "1.15",
-  "com.google.guava" % "guava" % "10.0.1",
+  "io.netty" % "netty" % "3.3.1.Final",
   "com.typesafe.akka" % "akka-file-mailbox" % "2.0-M4",
   "com.typesafe.akka" % "akka-slf4j" % "2.0-M4" % "provided",
   "com.typesafe.akka" % "akka-testkit" % "2.0-M4" % "test",
@@ -34,7 +33,7 @@ homepage := Some(url("https://github.com/mojolly/scapulet"))
 
 startYear := Some(2010)
 
-licenses := Seq(("BSD", url("http://github.com/mojolly/scapulet/raw/HEAD/LICENSE")))
+licenses := Seq(("BSD", url("https://github.com/mojolly/scapulet/raw/HEAD/LICENSE")))
 
 pomExtra <<= (pomExtra, name, description) {(pom, name, desc) => pom ++ Group(
   <mailingLists>

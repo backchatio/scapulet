@@ -14,22 +14,22 @@ object StreamErrors {
     def apply(text: Option[String] = None, applicationCondition: Seq[Node] = Seq.empty) = {
       (<stream:error>
          { XML.loadString("<%s xmlns=\"%s\" />".format(condition, ns.XmppStream)) }{
-           text.map(t => <text xmlns={ ns.XmppStream }>
-                           { t }
-                         </text>) getOrElse Nil
+           text.map(t ⇒ <text xmlns={ ns.XmppStream }>
+                          { t }
+                        </text>) getOrElse Nil
          }{ applicationCondition }
        </stream:error>).map(Utility.trim(_)).theSeq.head
     }
 
     def unapply(stanza: Node) = stanza.map(Utility.trim(_)).theSeq.head match {
-      case err @ <stream:error>{ ch @ _* }</stream:error> if !(err \\ condition).isEmpty => {
+      case err @ <stream:error>{ ch @ _* }</stream:error> if !(err \\ condition).isEmpty ⇒ {
         val txt = (err \ "text").text
         val text = if (txt.nonBlank) Some(txt) else None
-        val appCond = ch.filterNot(n => (condition :: "text" :: Nil).contains(n.label))
+        val appCond = ch.filterNot(n ⇒ (condition :: "text" :: Nil).contains(n.label))
         val c = NodeSeq.fromSeq(appCond)
         Some((text, c))
       }
-      case _ => None
+      case _ ⇒ None
     }
   }
 

@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package io.backchat.scapulet.org.jivesoftware.openfire.nio;
+package io.backchat.scapulet.jivesoftware.openfire.nio;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
@@ -43,7 +43,7 @@ import java.util.regex.Pattern;
  * @author Daniele Piras
  * @author Gaston Dombiak
  */
-class XMLLightweightParser {
+public class XMLLightweightParser {
 
 	private static final Pattern XML_HAS_CHARREF = Pattern.compile("&#(0*([0-9]+)|[xX]0*([0-9a-fA-F]+));");
 

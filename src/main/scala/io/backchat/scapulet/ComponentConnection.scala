@@ -1,50 +1,59 @@
 package io.backchat.scapulet
 
 import util.control.Exception._
-import org.jboss.netty.channel._
+import _root_.org.jboss.netty.channel._
 import akka.actor._
-import org.jboss.netty.buffer.{ ChannelBuffers, ChannelBuffer }
+import _root_.org.jboss.netty.buffer.{ ChannelBuffers, ChannelBuffer }
 import xml._
+import jivesoftware.openfire.nio.XMLLightweightParser
+import io.backchat.scapulet.Stanza.Predicate
 
 object ComponentConnection {
 
-  object OpenStream {
+  private[scapulet] object OpenStream {
     val openStreamFormatString = """<stream:stream xmlns="%s" xmlns:stream="%s" to="%s" >"""
     def apply(jid: String, nsd: String = ns.component.Accept) = openStreamFormatString.format(nsd, ns.Stream, jid)
+
   }
 
-  object StreamResponse {
+  private[scapulet] object StreamResponse {
     private val streamRegex = """(<\?[^?]>)?<stream:stream[^>]*>""".r
 
     def unapply(msg: String) = streamRegex.findFirstMatchIn(msg) match {
       case Some(start) ⇒
         val x = XML.loadString(start + "</stream:stream>")
-        Some(((x \ "@id").text, (x \ "@from").text))
+        Some(((x \ "@id" text), (x \ "@from" text)))
       case _ ⇒ None
     }
   }
 
-  object AuthenticationFailureResponse {
+  private[scapulet] object AuthenticationFailureResponse {
     private val regex = "(<stream:error>.*</stream:error>)(.*)".r
 
     def unapply(msg: String) = regex.findFirstMatchIn(msg) match {
       case Some(m) ⇒ {
         val x = XML.loadString(m.group(1))
-        Some((x \ "text").text)
+        Some(x \ "text" text)
       }
       case _ ⇒ None
     }
   }
 
-  class ComponentConnectionHandler(config: ConnectionConfig)(implicit protected val system: ActorSystem, actor: ActorRef) extends SimpleChannelUpstreamHandler with Logging {
+  private[scapulet] case class IncomingStanza(elem: Node)
+
+  private[scapulet] class ComponentConnectionHandler(config: ConnectionConfig)(implicit protected val system: ActorSystem, actor: ActorRef) extends SimpleChannelUpstreamHandler with Logging {
+
+    val parser = new XMLLightweightParser("UTF-8")
+
     override def channelConnected(ctx: ChannelHandlerContext, e: ChannelStateEvent) {
       logger info ("Connected to server, authenticating...")
       val buff = ChannelBuffers.copiedBuffer(OpenStream(config.address), Utf8)
+
       e.getChannel.write(buff)
     }
 
     override def channelDisconnected(ctx: ChannelHandlerContext, e: ChannelStateEvent) {
-      actor ! Scapulet.Disconnected
+      if (!actor.isTerminated) actor ! Scapulet.Disconnected
     }
 
     override def channelClosed(ctx: ChannelHandlerContext, e: ChannelStateEvent) {
@@ -59,24 +68,25 @@ object ComponentConnection {
       (allCatch withApply logError) {
         e.getMessage match {
           case b: ChannelBuffer if b.readable() ⇒ {
-            b.toString(Utf8) match {
-              case AuthenticationFailureResponse(error) ⇒ {
-                logger error error
-                throw new UnauthorizedException(error)
-              }
-              case StreamResponse(id, from) ⇒ {
-                logger info "Signing in to message with id: [%s] from [%s]".format(id, from)
-                val buff = ChannelBuffers.copiedBuffer(<handshake>{ config.asHexSecret(id) }</handshake>.toString, Utf8)
-                e.getChannel.write(buff)
-              }
-              case source ⇒ {
-                ReadStanza(source) foreach {
-                  case <handshake/> ⇒ {
-                    logger info "Established connection to [%s:%d]".format(config.host, config.port)
-                    actor ! Scapulet.Connected
+            parser.read(b.toByteBuffer)
+            if (parser.areThereMsgs()) {
+              parser.getMsgs foreach {
+                case AuthenticationFailureResponse(error) ⇒ throw new UnauthorizedException(error)
+                case StreamResponse(id, from) ⇒ {
+                  logger info "Signing in to message with id: [%s] from [%s]".format(id, from)
+                  val buff = ChannelBuffers.copiedBuffer(<handshake>{ config.asHexSecret(id) }</handshake>.toString, Utf8)
+                  e.getChannel.write(buff)
+                }
+                case source ⇒ {
+                  logger debug "Reading stanza: %s".format (source)
+                  ReadStanza(source) foreach {
+                    case <handshake/> ⇒ {
+                      logger info "Established connection to [%s:%d]".format(config.host, config.port)
+                      actor ! Scapulet.Connected
+                    }
+                    case x: Node ⇒ actor ! IncomingStanza(x)
+                    case _       ⇒
                   }
-                  case x: Node ⇒ system.scapulet.eventStream publish x
-                  case _       ⇒
                 }
               }
             }
@@ -95,20 +105,34 @@ object ComponentConnection {
       logger.error(th, "Unexpected exception in component connection [{}]", config.address)
     }
   }
-}
-class ComponentConnection extends ScapuletConnectionActor {
 
-  import ComponentConnection.ComponentConnectionHandler
-  val config = context.system.scapulet.components(self.path.name)
+  trait Handler {
+    def predicate: Predicate
+    def name: String
+  }
+  case class RegisterHandler(predicate: Predicate, handler: Props, name: String) extends Handler
+  case class ActorHandler(predicate: Predicate, handler: ActorRef) extends Handler {
+    def name = handler.path.toStringWithAddress(handler.path.address)
+  }
+}
+
+private[scapulet] class ComponentConnection(overrideConfig: Option[ConnectionConfig] = None, callback: Option[ActorRef] = None) extends ScapuletConnectionActor {
+
+  def this() = this(None)
+
+  import ComponentConnection._
+  val config = overrideConfig getOrElse context.system.scapulet.settings.component(self.path.name)
 
   private var connection: NettyClient = null
+  private var authenticated = false
+  private var handlers = Vector.empty[Handler]
 
   override def preStart() {
     self ! Scapulet.Connect
   }
 
   override def postStop() {
-    if (connection != null) connection.disconnect()
+    if (connection != null) connection.close()
     logger info "XMPP component [%s] disconnected from host [%s:%d].".format(config.address, config.host, config.port)
   }
 
@@ -118,53 +142,47 @@ class ComponentConnection extends ScapuletConnectionActor {
   }
 
   protected def receive = {
-    case xml: NodeSeq       ⇒ connection.write(xml)
-    case Scapulet.Reconnect ⇒ connection.reconnect()
+    case xml: NodeSeq ⇒ connection.write(xml)
     case Scapulet.Connect ⇒ {
+      logger info "Starting netty client connection"
       implicit val system = context.system
       if (connection == null) connection = new NettyClient(config, Channels.pipeline(new ComponentConnectionHandler(config)))
       connection.connect()
     }
+    case Scapulet.Connected ⇒ {
+      logger info "XMPP component session %s established".format(self.path.name)
+      authenticated = true
+      callback foreach { _ ! Scapulet.Connected }
+    }
+    case Scapulet.Reconnect ⇒ {
+      callback foreach { _ ! Scapulet.Reconnect }
+      connection.reconnect()
+    }
+    case Scapulet.Disconnect ⇒ {
+      callback foreach { _ ! Scapulet.Disconnect }
+      connection.disconnect()
+    }
+    case Scapulet.Disconnected ⇒ context stop self
+    case IncomingStanza(stanza) if authenticated ⇒ {
+      (handlers filter (_.predicate(stanza)) map (h ⇒ context.actorFor(h.name))).distinct foreach { _ ! stanza }
+    }
+    case _: IncomingStanza ⇒ throw new IllegalStateException("Received a stanza before being authenticated")
+    case h @ RegisterHandler(_, props, name) ⇒ {
+      val created = context.actorOf(props, name)
+      context watch created
+      handlers :+= h
+      sender ! created
+    }
+    case h: ActorHandler ⇒ {
+      handlers :+= h
+      context watch h.handler
+    }
+    case Terminated(actor) ⇒ {
+      handlers = handlers filterNot {
+        case ActorHandler(_, h) ⇒ h == actor
+        case x                  ⇒ context.actorFor(x.name) == actor
+      }
+    }
   }
 }
 
-//class ComponentConnection extends Actor {
-//
-//  val state = IO.IterateeRef.Map.async[IO.Handle]()(context.dispatcher)
-//
-//  override def preStart {
-//    IOManager(context.system) listen new InetSocketAddress(port)
-//  }
-//
-//  def receive = {
-//    case bytes: ByteString =>
-//    case IO.NewClient(server) ⇒
-//      val socket = server.accept()
-//      state(socket) flatMap (_ => processConnect)
-//
-//    case IO.Read(socket, bytes) ⇒
-//      state(socket)(IO.Chunk(bytes))
-//
-//    case IO.Closed(socket, cause) ⇒
-//      state(socket)(IO.EOF(None))
-//      state -= socket
-//
-//  }
-//
-//  protected def processConnect(socket: IO.SocketHandle): IO.Iteratee[Elem] = {
-//    for { ele <- loadXml } yield ele
-//  }
-//
-//  protected def loadXml = {
-//    for {
-//      chunk <- IO.takeAll
-//      ele <- readChunk(chunk.utf8String)
-//    } yield ele
-//  }
-//
-//  private def readChunk(source: String): Seq[Elem] =
-//    (catching(classOf[SAXParseException]) withApply wrap(source)_) {
-//      List(XML.loadString(source))
-//    }
-//  private def wrap(source: String)(th: Throwable) = XML.loadString("<wrapper>%s</wrapper>".format(source)).child.toList
-//}

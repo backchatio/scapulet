@@ -1,8 +1,8 @@
 package io.backchat.scapulet
 
 import xml._
-import org.jboss.netty.handler.codec.base64.Base64
-import org.jboss.netty.buffer.ChannelBuffers
+import _root_.org.jboss.netty.handler.codec.base64.Base64
+import _root_.org.jboss.netty.buffer.ChannelBuffers
 
 object CoreExt {
 
@@ -44,6 +44,8 @@ object CoreExt {
     }
 
     private[scapulet] def isNotNull = s != null
+
+    def sha1Hex = StringUtil.hash(s)
 
   }
 

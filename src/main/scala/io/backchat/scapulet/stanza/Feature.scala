@@ -13,10 +13,10 @@ object Feature {
   }
 
   def unapply(elem: Node) = elem match {
-    case feat @ Elem(_, "feature", _, _, _*) if feat.attribute("var").isDefined =>
+    case feat @ Elem(_, "feature", _, _, _*) if feat.attribute("var").isDefined ⇒
       feat.attribute("var") flatMap {
-        a => Option(a.text)
+        a ⇒ Option(a.text)
       }
-    case _ => None
+    case _ ⇒ None
   }
 }

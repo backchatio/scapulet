@@ -1,7 +1,7 @@
 package io.backchat.scapulet
 
-import org.jboss.netty.channel._
-import org.jboss.netty.buffer.ChannelBuffer
+import _root_.org.jboss.netty.channel._
+import _root_.org.jboss.netty.buffer.ChannelBuffer
 import akka.actor.ActorSystem
 import util.control.Exception._
 import xml._

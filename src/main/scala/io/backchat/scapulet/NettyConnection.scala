@@ -1,15 +1,15 @@
 package io.backchat.scapulet
 
 import xml._
-import org.jboss.netty.buffer.ChannelBuffers
-import akka.actor.{ ActorContext, ActorRef }
-import org.jboss.netty.channel._
+import _root_.org.jboss.netty.buffer.ChannelBuffers
+import _root_.org.jboss.netty.channel._
 import java.util.concurrent.atomic.AtomicInteger
-import socket.nio.NioClientSocketChannelFactory
-import org.jboss.netty.bootstrap.{ ServerBootstrap, ClientBootstrap, Bootstrap }
-import java.util.concurrent.{TimeUnit, ThreadFactory, Executors}
+import _root_.org.jboss.netty.bootstrap.{ ServerBootstrap, ClientBootstrap, Bootstrap }
+import java.util.concurrent.{ TimeUnit, ThreadFactory, Executors }
+import akka.actor.{ ActorSystem, ActorContext, ActorRef }
+import socket.nio.{ NioServerSocketChannelFactory, NioClientSocketChannelFactory }
 
-private[scapulet] object NettyConnection {
+object NettyConnection {
   private val threadCounter = new AtomicInteger(0)
   private def threadFactory(connectionType: String, name: String) = new ThreadFactory {
     def newThread(r: Runnable) = {
@@ -22,10 +22,10 @@ private[scapulet] object NettyConnection {
       t
     }
   }
-}
-private[scapulet] abstract class NettyConnection(connectionType: String, config: ConnectionConfig)(implicit actor: ActorRef, context: ActorContext) extends Logging {
 
-  protected implicit val system = context.system
+}
+private[scapulet] abstract class NettyConnection(connectionType: String, config: ConnectionConfig)(implicit actor: ActorRef, protected val system: ActorSystem) extends Logging {
+
   protected val threadFactory = NettyConnection.threadFactory(connectionType, actor.path.name)
   protected val worker = Executors.newCachedThreadPool(threadFactory)
   protected val boss = Executors.newCachedThreadPool(threadFactory)
@@ -48,22 +48,22 @@ private[scapulet] abstract class NettyConnection(connectionType: String, config:
   def isConnected = connection != null && connection.isConnected
 
   def disconnect() {
-    if (isConnected) doDisconnect()
+    if (isConnected) doDisconnect().awaitUninterruptibly(3, TimeUnit.SECONDS)
   }
-  
+
   def close() {
     connection.close().awaitUninterruptibly()
     bootstrap.releaseExternalResources()
     quiet { worker.awaitTermination(5, TimeUnit.SECONDS) }
     quiet { boss.awaitTermination(5, TimeUnit.SECONDS) }
   }
-  
-  private def quiet(thunk: => Any) = try { thunk } catch { case _ => }
 
-  def write(xml: NodeSeq) {
+  private def quiet(thunk: ⇒ Any) = try { thunk } catch { case _ ⇒ }
+
+  def write(xml: NodeSeq, channel: Channel = connection) {
     val txt = xml.map(Utility.trimProper _).toString
     val buff = ChannelBuffers.copiedBuffer(txt, Utf8)
-    val writeFuture = connection.write(buff)
+    val writeFuture = channel.write(buff)
     writeFuture.addListener(new ChannelFutureListener {
       def operationComplete(future: ChannelFuture) {
         if (!future.isSuccess) {
@@ -73,20 +73,16 @@ private[scapulet] abstract class NettyConnection(connectionType: String, config:
     })
   }
 
-  private def internalConnect(phase: String) {
-    connection = doConnect(phase)
-
-  }
-
+  private def internalConnect(phase: String) { connection = doConnect(phase) }
   protected def doConnect(phase: String): Channel
   protected def doDisconnect(): ChannelFuture
 
 }
 
-private[scapulet] class NettyServer(config: ConnectionConfig, pipeline: ⇒ ChannelPipeline)(implicit actor: ActorRef, context: ActorContext)
+private[scapulet] class NettyServer(config: ConnectionConfig, pipeline: ⇒ ChannelPipeline)(implicit actor: ActorRef, system: ActorSystem)
     extends NettyConnection("server", config) {
-  
-  protected val bootstrap = new ServerBootstrap(channelFactory)
+
+  protected val bootstrap = new ServerBootstrap(new NioServerSocketChannelFactory(boss, worker))
   bootstrap.setPipelineFactory(new ChannelPipelineFactory {
     def getPipeline = pipeline
   })
@@ -99,12 +95,16 @@ private[scapulet] class NettyServer(config: ConnectionConfig, pipeline: ⇒ Chan
     ch
   }
 
-  protected def doDisconnect() = connection.unbind().awaitUninterruptibly(3, TimeUnit.SECONDS)
+  protected def doDisconnect() = {
+    logger info "Stopping XMPP server at [%s:%s]".format(config.host, config.port)
+    connection.unbind()
+  }
+
 }
 
-private[scapulet] class NettyClient(config: ConnectionConfig, pipeline: ⇒ ChannelPipeline)(implicit actor: ActorRef, context: ActorContext)
+private[scapulet] class NettyClient(config: ConnectionConfig, pipeline: ⇒ ChannelPipeline)(implicit actor: ActorRef, system: ActorSystem)
     extends NettyConnection("client", config) {
-  
+
   protected val bootstrap = new ClientBootstrap(channelFactory)
   bootstrap.setPipelineFactory(new ChannelPipelineFactory {
     def getPipeline = pipeline
@@ -117,16 +117,21 @@ private[scapulet] class NettyClient(config: ConnectionConfig, pipeline: ⇒ Chan
     val connectionFuture = bootstrap connect serverAddress
     logger info "%s to XMPP server at [%s:%s]".format(phase, config.host, config.port)
     connectionFuture.awaitUninterruptibly
-    logger debug "The succeeded? %s".format(connectionFuture.isDone)
+    logger debug "The connection succeeded? %s".format(connectionFuture.isDone)
     if (connectionFuture.isCancelled) {
       logger info "Connection cancelled by user, exiting."
-      context stop actor
+      system stop actor
     }
     if (!connectionFuture.isSuccess) {
       logger.error(connectionFuture.getCause, "XMPP connection has failed, trying to reconnect in %s seconds.".format(config.reconnectDelay.toSeconds))
+      throw connectionFuture.getCause
     }
     connectionFuture.getChannel
   }
 
-  protected def doDisconnect() = connection.disconnect().awaitUninterruptibly(3, TimeUnit.SECONDS)
+  protected def doDisconnect() = {
+    logger info "Disconnecting from XMPP server at [%s:%s]".format(config.host, config.port)
+    connection.disconnect()
+  }
+
 }

@@ -5,8 +5,6 @@ import javax.security.sasl._
 import javax.security.auth.callback._
 import collection.JavaConversions._
 import io.backchat.scapulet.Scapulet.ScapuletConnection
-import org.jboss.netty.handler.codec.base64.Base64
-import org.jboss.netty.buffer.ChannelBuffers
 
 object SASLAuthentication {
 
@@ -20,10 +18,10 @@ object SASLAuthentication {
     }
 
     def unapply(node: Node) = node match {
-      case f @ <failure>{ ch @ _* }</failure> if !(f \ condition).isEmpty => {
+      case f @ <failure>{ ch @ _* }</failure> if !(f \ condition).isEmpty ⇒ {
         Some(condition)
       }
-      case _ => None
+      case _ ⇒ None
     }
   }
 
@@ -43,8 +41,8 @@ object SASLAuthentication {
 
   object SASLFailure extends SASLFailure {
     def unapply(node: Node) = node match {
-      case f @ <failure>{ condition @ _* }</failure> if !condition.isEmpty => condition.headOption.map(_.label)
-      case _ => None
+      case f @ <failure>{ condition @ _* }</failure> if !condition.isEmpty ⇒ condition.headOption.map(_.label)
+      case _ ⇒ None
     }
   }
 
@@ -54,8 +52,8 @@ object SASLAuthentication {
                               </success>
 
     def unapply(node: Node) = node match {
-      case s @ <success>{ _* }</success> => Some(s.text)
-      case _ => None
+      case s @ <success>{ _* }</success> ⇒ Some(s.text)
+      case _                             ⇒ None
     }
   }
 
@@ -65,8 +63,8 @@ object SASLAuthentication {
                               </challenge>
 
     def unapply(node: Node) = node match {
-      case s @ <challenge>{ _* }</challenge> => Some(s.text)
-      case _ => None
+      case s @ <challenge>{ _* }</challenge> ⇒ Some(s.text)
+      case _                                 ⇒ None
     }
   }
 
@@ -120,7 +118,7 @@ object SASLAuthentication {
           authText = resp.asBase64String
         }
       } catch {
-        case e: SaslException => throw new SASLAuthenticationFailed(e)
+        case e: SaslException ⇒ throw new SASLAuthenticationFailed(e)
       }
       connection.write(<auth mechanism={ name } xmlns={ ns.Sasl }>
                          { authText }
@@ -140,17 +138,17 @@ object SASLAuthentication {
 
     def handle(callbacks: Array[Callback]) {
       callbacks foreach {
-        case cb: NameCallback => {
+        case cb: NameCallback ⇒ {
           cb.setName(_userName)
         }
-        case cb: PasswordCallback => {
+        case cb: PasswordCallback ⇒ {
           cb.setPassword(_password)
         }
-        case cb: RealmCallback => {
+        case cb: RealmCallback ⇒ {
           cb.setText(_hostName)
         }
-        case cb: RealmChoiceCallback => {}
-        case cb: Callback => throw new UnsupportedCallbackException(cb)
+        case cb: RealmChoiceCallback ⇒ {}
+        case cb: Callback            ⇒ throw new UnsupportedCallbackException(cb)
       }
     }
 

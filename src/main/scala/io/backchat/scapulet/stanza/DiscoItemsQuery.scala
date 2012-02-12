@@ -27,10 +27,10 @@ object DiscoItemsQuery {
 
   def unapply(msg: Node) = {
     msg match {
-      case <iq>{ c @ _* }</iq> if ((msg \ "@type").text == "get") => {
+      case <iq>{ c @ _* }</iq> if ((msg \ "@type").text == "get") ⇒ {
         if (c.exists {
-          case Elem(_, "query", _, NamespaceBinding(_, `DISCO_ITEMS_NS`, _), _*) => true
-          case _ => false
+          case Elem(_, "query", _, NamespaceBinding(_, `DISCO_ITEMS_NS`, _), _*) ⇒ true
+          case _ ⇒ false
         }) {
 
           val id = msg \ "@id"
@@ -47,7 +47,7 @@ object DiscoItemsQuery {
         }
 
       }
-      case _ => None
+      case _ ⇒ None
     }
   }
 }

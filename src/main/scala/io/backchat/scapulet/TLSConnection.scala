@@ -63,7 +63,7 @@ class TLSConnection(implicit protected val system: ActorSystem) extends TLSStanz
         in = new FileInputStream(trustStorePath)
         _truststore.load(in, config.truststorePassword.toArray)
       } catch {
-        case e => {
+        case e ⇒ {
           logger.error(e, "An error occurred while getting the trust store")
           _config = _config.copy(verifyRootCA = false)
         }
@@ -71,7 +71,7 @@ class TLSConnection(implicit protected val system: ActorSystem) extends TLSStanz
         if (in != null) try {
           in.close
         } catch {
-          case e: IOException =>
+          case e: IOException ⇒
         }
       }
     }
@@ -93,7 +93,7 @@ class TLSConnection(implicit protected val system: ActorSystem) extends TLSStanz
     if (config.verifyChain) {
       var lastPrincipal: Principal = null
       certificates.reverse sliding (2, 1) foreach {
-        certs =>
+        certs ⇒
           val curr = certs.last
           val subject = curr.getSubjectDN()
           if (lastPrincipal != null) {
@@ -102,7 +102,7 @@ class TLSConnection(implicit protected val system: ActorSystem) extends TLSStanz
                 val pubKey = certs.head.getPublicKey()
                 curr verify pubKey
               } catch {
-                case e: GeneralSecurityException => {
+                case e: GeneralSecurityException ⇒ {
                   throw new CertificateException("Signature verifcation failed for: " + peerId.mkString(", "))
                 }
               }
@@ -121,7 +121,7 @@ class TLSConnection(implicit protected val system: ActorSystem) extends TLSStanz
           trusted = true
         }
       } catch {
-        case e: KeyStoreException =>
+        case e: KeyStoreException ⇒
           logger.error(e, "Couldn't validate the Root CA")
       }
       if (!trusted) throw new CertificateException("" + peerId.mkString(", "))
@@ -139,11 +139,11 @@ class TLSConnection(implicit protected val system: ActorSystem) extends TLSStanz
     if (!config.allowExpiredCertificates) {
       val now = new Date
       certificates foreach {
-        cert =>
+        cert ⇒
           try {
             cert checkValidity now
           } catch {
-            case e: GeneralSecurityException => {
+            case e: GeneralSecurityException ⇒ {
               throw new CertificateException("certificate for " + server + " has expired")
             }
           }

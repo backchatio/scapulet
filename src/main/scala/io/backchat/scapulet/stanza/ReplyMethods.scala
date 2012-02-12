@@ -4,7 +4,7 @@ package stanza
 import xml._
 
 trait ReplyMethods {
-  self: ScapuletHandler =>
+  self: ScapuletHandler ⇒
 
   import CoreExt._
 
@@ -43,7 +43,7 @@ trait ReplyMethods {
               </presence>
     if (presType.isDefined) {
       (presType map {
-        pt => ele % Map("type" -> pt)
+        pt ⇒ ele % Map("type" -> pt)
       }).get
     } else ele
 

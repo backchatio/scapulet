@@ -12,8 +12,8 @@ object AkkaSpecification {
   val testConf: Config = ConfigFactory.parseString("""
       akka {
         event-handlers = ["akka.testkit.TestEventListener"]
-        loglevel = DEBUG
-        stdout-loglevel = DEBUG
+        loglevel = WARNING
+        stdout-loglevel = WARNING
         extensions = [
           "io.backchat.scapulet.ScapuletExtension$"
         ]

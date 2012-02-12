@@ -17,15 +17,15 @@ object DiscoItem {
   }
 
   def unapply(elem: Node) = elem match {
-    case it @ Elem(_, "item", _, _, _*) if it.attribute("jid").isDefined => {
+    case it @ Elem(_, "item", _, _, _*) if it.attribute("jid").isDefined ⇒ {
       val name = it.attribute("name") flatMap {
-        a => Option(a.text)
+        a ⇒ Option(a.text)
       }
       val node = it.attribute("node") flatMap {
-        a => Option(a.text)
+        a ⇒ Option(a.text)
       }
       Some(((it \ "@jid").text, name, node))
     }
-    case _ => None
+    case _ ⇒ None
   }
 }

@@ -23,10 +23,10 @@ object DiscoInfoQuery {
 
   def unapply(msg: Node) = {
     msg match {
-      case <iq>{ c @ _* }</iq> if ((msg \ "@type").text == "get") => {
+      case <iq>{ c @ _* }</iq> if ((msg \ "@type").text == "get") ⇒ {
         if (c exists {
-          case Elem(_, "query", _, NamespaceBinding(_, `DISCO_INFO_NS`, _), _*) => true
-          case _ => false
+          case Elem(_, "query", _, NamespaceBinding(_, `DISCO_INFO_NS`, _), _*) ⇒ true
+          case _ ⇒ false
         }) {
           val id = msg \ "@id"
           val node = msg \ "query" \ "@node"
@@ -39,7 +39,7 @@ object DiscoInfoQuery {
             if (node.isEmpty) None else Option(node.text)))
         } else None
       }
-      case _ => None
+      case _ ⇒ None
     }
   }
 }

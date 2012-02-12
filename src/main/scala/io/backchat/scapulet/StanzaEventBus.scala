@@ -1,62 +1,97 @@
 package io.backchat.scapulet
 
 import akka.event.{ ActorEventBus, EventBus }
-import collection.JavaConversions._
-import com.google.common.collect.MapMaker
-import xml.{ NodeSeq, Elem, Node }
+import xml._
+import java.util.concurrent.ConcurrentHashMap
+import scala.collection.JavaConverters._
 
-object StanzaEventBus {
-
-  trait StanzaPredicate {
+object Stanza {
+  trait Predicate {
     def name: String
     def apply(evt: NodeSeq): Boolean
     override def equals(obj: Any) = obj match {
-      case pred: StanzaPredicate ⇒ pred.name == name
-      case _                     ⇒ false
+      case pred: Predicate ⇒ pred.name == name
+      case _               ⇒ false
+    }
+
+    def &&(other: Predicate): Predicate = {
+      new matching.ForAllPredicate(this, other)
+    }
+
+    def ||(other: Predicate): Predicate = {
+      new matching.ForAnyPredicate(this, other)
     }
   }
 
-  object AllStanzas extends StanzaPredicate {
-    val name = "all-stanzas"
-    def apply(evt: NodeSeq) = true
+  object matching {
+
+    object AllStanzas extends Predicate {
+      val name = "all-stanzas"
+      def apply(evt: NodeSeq) = true
+
+      override def &&(other: Predicate): Predicate = other
+
+      override def ||(other: Predicate): Predicate = this
+    }
+
+    private[Stanza] class ForAllPredicate(predicate: Predicate, predicates: Predicate*) extends Predicate {
+      private val allPredicates = Vector((predicate +: predicates): _*)
+      val name = allPredicates sortBy (_.name) mkString "::"
+
+      def apply(evt: NodeSeq) = allPredicates forall (_ apply evt)
+    }
+
+    private[Stanza] class ForAnyPredicate(predicate: Predicate, predicates: Predicate*) extends Predicate {
+      private val allPredicates = Vector((predicate +: predicates): _*)
+      val name = allPredicates sortBy (_.name) mkString "||"
+
+      def apply(evt: NodeSeq) = allPredicates exists (_ apply evt)
+    }
+
+    private[Stanza] class PartialFunctionPredicate(val name: String, pf: PartialFunction[NodeSeq, Boolean]) extends Predicate {
+      def apply(evt: NodeSeq) = pf.isDefinedAt(evt) && pf(evt)
+    }
+
+    def apply(name: String, pf: PartialFunction[NodeSeq, Boolean]): Predicate =
+      new PartialFunctionPredicate(name, pf)
+
   }
 
-  class CompositePredicate(predicate: StanzaPredicate, predicates: StanzaPredicate*) extends StanzaPredicate {
-    private val allPredicates = Vector((predicate +: predicates): _*)
-    val name = allPredicates sortBy (_.name) mkString "::"
-
-    def apply(evt: NodeSeq) = allPredicates forall (_ apply evt)
-  }
-
-  private val mapMaker = new MapMaker
 }
 class StanzaEventBus extends EventBus with ActorEventBus {
   type Event = NodeSeq
-  type Classifier = StanzaEventBus.StanzaPredicate
+  type Classifier = Stanza.Predicate
 
-  private val subscriptions = StanzaEventBus.mapMaker.makeMap[Classifier, Set[Subscriber]].withDefaultValue(Set.empty[Subscriber])
+  private val subscriptions = new ConcurrentHashMap[Classifier, Set[Subscriber]]
 
   def subscribe(subscriber: Subscriber, to: Classifier) = {
-    val subs = subscriptions(to)
+    val subs = Option(subscriptions get to) getOrElse Set.empty[Subscriber]
     val res = subs contains subscriber
-    subscriptions(to) = subs + subscriber
+    if (!res) subscriptions.put(to, subs + subscriber)
     res
   }
 
   def unsubscribe(subscriber: Subscriber, from: Classifier) = {
-    val subs = subscriptions(from)
-    val res = subs contains subscriber
-    subscriptions(from) = subs filterNot (_ == subscriber)
-    res
+    Option(subscriptions get from) map { subs ⇒
+      val res = subs contains subscriber
+      if (res) subscriptions.put(from, subs filterNot (_ == subscriber))
+      res
+    } getOrElse false
   }
 
   def unsubscribe(subscriber: Subscriber) {
-    subscriptions filter ({ case (_, subs) ⇒ subs contains subscriber }) foreach {
-      case (to, subs) ⇒ subscriptions(to) = subs filterNot (_ == subscriber)
-    }
+    (safeSubscriptions
+      filter ({ case (_, subs) ⇒ subs contains subscriber })
+      foreach {
+        case (to, subs) if subs.nonEmpty ⇒ subscriptions.put(to, subs filterNot (_ == subscriber))
+      })
   }
 
+  private def safeSubscriptions = subscriptions.asScala.withDefaultValue(Set.empty[Subscriber])
+
   def publish(event: Event) {
-    (subscriptions filterKeys (_ apply event)).values.flatten foreach (_ ! event)
+    val subscribers = (safeSubscriptions filterKeys (_ apply event)).values.flatten
+
+    subscribers foreach (_ ! event)
   }
 }
