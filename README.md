@@ -12,7 +12,7 @@ I've used this library to create a MUC component which we needed and now I need 
 which things need to be shared and those are being put in this library.   
 Currently I'm working towards implementing XEP-0060
 
-There is a google group for your questions: [Mailing List](http://groups.google.com/group/scapulet-user)
+There is a google group for your questions: [Mailing List](http://groups.google.com/group/scapulet-user)  
 There is also an irc channel: <irc://irc.freenode.net/scapulet>  
 
 implemented:
