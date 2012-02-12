@@ -12,14 +12,14 @@ I've used this library to create a MUC component which we needed and now I need 
 which things need to be shared and those are being put in this library.   
 Currently I'm working towards implementing XEP-0060
 
-There is a google group for your questions: [Mailing List](http://groups.google.com/group/scapulet-user)  
+There is a google group for your questions: [Mailing List](http://groups.google.com/group/scapulet-user)
 There is also an irc channel: <irc://irc.freenode.net/scapulet>  
 
 implemented:
-* [XMPP-Core](<http://xmpp.org/rfcs/rfc3920.html) (partial)
-* [IM & Presence](<http://xmpp.org/rfcs/rfc3921.html) (partial)
-* [XEP 0114: component connections](http://xmpp.org/extensions/xep-0114.html)
-* [XEP 0030: Service discovery](http://xmpp.org/extensions/xep-0030.html) (partial)
+  * [XMPP-Core](http://xmpp.org/rfcs/rfc3920.html) (partial)
+  * [IM & Presence](<http://xmpp.org/rfcs/rfc3921.html) (partial)
+  * [XEP 0114: component connections](http://xmpp.org/extensions/xep-0114.html)
+  * [XEP 0030: Service discovery](http://xmpp.org/extensions/xep-0030.html) (partial)
 
 
 ## Building an XMPP Component
