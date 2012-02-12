@@ -15,7 +15,7 @@ Currently I'm working towards implementing XEP-0060
 There is a google group for your questions: [Mailing List](http://groups.google.com/group/scapulet-user)
 There is also an irc channel: <irc://irc.freenode.net/scapulet>  
 
-implemented:
+implemented:  
   * [XMPP-Core](http://xmpp.org/rfcs/rfc3920.html) (partial)
   * [IM & Presence](<http://xmpp.org/rfcs/rfc3921.html) (partial)
   * [XEP 0114: component connections](http://xmpp.org/extensions/xep-0114.html)
