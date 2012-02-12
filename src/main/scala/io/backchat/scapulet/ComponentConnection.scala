@@ -1,5 +1,6 @@
 package io.backchat.scapulet
 
+import stanza.{ Identity, Feature }
 import util.control.Exception._
 import _root_.org.jboss.netty.channel._
 import akka.actor._
@@ -7,6 +8,38 @@ import _root_.org.jboss.netty.buffer.{ ChannelBuffers, ChannelBuffer }
 import xml._
 import jivesoftware.openfire.nio.XMLLightweightParser
 import io.backchat.scapulet.Stanza.Predicate
+import akka.pattern.ask
+import akka.dispatch.{ Await, Future }
+import akka.util.duration._
+
+abstract class XmppComponent(val id: String)(implicit val system: ActorSystem) {
+
+  private implicit val timeout = system.settings.ActorTimeout
+  private var _handlers = Vector.empty[ScapuletHandler]
+
+  def features: Seq[Feature] = {
+    val futures = _handlers map (h ⇒ (h.handler ? ScapuletHander.Messages.Features).mapTo[Seq[Feature]])
+    Await.result(Future.reduce(futures)((_: Seq[Feature]) ++ _), 2 seconds)
+  }
+
+  def identities: Seq[Identity] = {
+    val futures = _handlers map (h ⇒ (h.handler ? ScapuletHander.Messages.Identities).mapTo[Seq[Identity]])
+    Await.result(Future.reduce(futures)((_: Seq[Identity]) ++ _), 2 seconds)
+  }
+
+  def handlers: Seq[ScapuletHandler] = _handlers
+
+  def +=(handler: ScapuletHandler) = {
+    _handlers :+= handler
+    handler
+  }
+
+  def -=(handler: ScapuletHandler) = {
+    _handlers = _handlers filterNot (_ == handler)
+    handler
+  }
+
+}
 
 object ComponentConnection {
 
@@ -116,7 +149,7 @@ object ComponentConnection {
   }
 }
 
-private[scapulet] class ComponentConnection(overrideConfig: Option[ComponentConfig] = None, callback: Option[ActorRef] = None) extends ScapuletConnectionActor {
+private[scapulet] class ComponentConnection(component: XmppComponent, overrideConfig: Option[ComponentConfig] = None, callback: Option[ActorRef] = None) extends ScapuletConnectionActor {
 
   def this() = this(None)
 
@@ -154,7 +187,7 @@ private[scapulet] class ComponentConnection(overrideConfig: Option[ComponentConf
       connection.connect()
     }
     case Scapulet.Connected ⇒ {
-      logger info "XMPP component session %s established".format(self.path.name)
+      logger info "XMPP component session %s established".format(component.id)
       authenticated = true
       callback foreach { _ ! Scapulet.Connected }
     }

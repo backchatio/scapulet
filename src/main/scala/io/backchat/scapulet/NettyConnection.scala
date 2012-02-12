@@ -1,10 +1,10 @@
 package io.backchat.scapulet
 
 import xml._
-import _root_.org.jboss.netty.buffer.ChannelBuffers
-import _root_.org.jboss.netty.channel._
+import org.jboss.netty.buffer.ChannelBuffers
+import org.jboss.netty.channel._
 import java.util.concurrent.atomic.AtomicInteger
-import _root_.org.jboss.netty.bootstrap.{ ServerBootstrap, ClientBootstrap, Bootstrap }
+import org.jboss.netty.bootstrap.{ ServerBootstrap, ClientBootstrap, Bootstrap }
 import java.util.concurrent.{ TimeUnit, ThreadFactory, Executors }
 import akka.actor.{ ActorSystem, ActorContext, ActorRef }
 import socket.nio.{ NioServerSocketChannelFactory, NioClientSocketChannelFactory }

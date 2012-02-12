@@ -79,12 +79,12 @@ object ScapuletExtension extends ExtensionId[ScapuletExtension] with ExtensionId
       Await.result((guardian ? CreateActor(Props[Supervisor], "components")).mapTo[ActorRef], timeout.duration)
     }
 
-    def component(name: String) = {
-      val conn = if (system.actorFor(components.path / name).isTerminated)
-        Await.result((components ? CreateActor(Props(new ComponentConnection()), name)).mapTo[ActorRef], timeout.duration)
-      else system.actorFor(components.path / name)
-      new Component(conn, system)
+    private[scapulet] def componentConnection(component: XmppComponent) = {
+      if (system.actorFor(components.path / component.id).isTerminated)
+        Await.result((components ? CreateActor(Props(new ComponentConnection(component)), component.id)).mapTo[ActorRef], timeout.duration)
+      else system.actorFor(components.path / component.id)
     }
+
 
   }
 }

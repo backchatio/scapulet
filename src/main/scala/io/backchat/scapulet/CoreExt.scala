@@ -1,7 +1,7 @@
 package io.backchat.scapulet
 
-import xml._
 import _root_.org.jboss.netty.handler.codec.base64.Base64
+import xml._
 import _root_.org.jboss.netty.buffer.ChannelBuffers
 
 object CoreExt {
