@@ -11,7 +11,7 @@ object ScapuletExtension extends ExtensionId[ScapuletExtension] with ExtensionId
 
   class ComponentSettings(config: Config, defaultConfig: Config) {
     def get(name: String) = if (config.hasPath(name)) {
-      Some(ConnectionConfig(config.withFallback(defaultConfig)))
+      Some(ComponentConfig(config.withFallback(defaultConfig)))
     } else None
 
     def apply(name: String) = get(name).get
@@ -55,8 +55,16 @@ object ScapuletExtension extends ExtensionId[ScapuletExtension] with ExtensionId
     import akka.pattern.ask
     implicit private val timeout = system.settings.ActorTimeout
     private val registration = ComponentConnection.RegisterHandler
-    def registerHandler(name: String, predicate: Stanza.Predicate, handler: ⇒ ScapuletHandler) = {
+    def registerHandler(name: String, predicate: Stanza.Predicate, handler: ⇒ ScapuletHandler): ActorRef = {
       Await.result((connection ? registration(predicate, Props(handler), name)).mapTo[ActorRef], timeout.duration)
+    }
+
+    def registerHandler(name: String, handle: akka.actor.Actor.Receive): ActorRef = {
+      val predicate = Stanza.matching(name, { case x ⇒ handle.isDefinedAt(x) })
+      val handler = () ⇒ new ScapuletHandler {
+        protected def handleStanza = handle
+      }
+      registerHandler(name, predicate, handler())
     }
   }
 

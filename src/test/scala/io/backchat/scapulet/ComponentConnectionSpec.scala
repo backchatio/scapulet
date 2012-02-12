@@ -45,12 +45,12 @@ class ComponentConnectionSpec extends AkkaSpecification {
     val handleNone = TestProbe()
 
     val connConfig =
-      ConnectionConfig(
+      ComponentConfig("test", "test for connection", ConnectionConfig(
         userName = "componentid",
         password = "componentpassword",
         host = "127.0.0.1",
         port = FreePort(),
-        virtualHost = Some("localhost"))
+        virtualHost = Some("localhost")))
 
     val openStream = OpenStream("componentid.localhost")
     val challenge = "<handshake>%s</handshake>".format("challengeidcomponentpassword".sha1Hex)
@@ -91,7 +91,7 @@ class ComponentConnectionSpec extends AkkaSpecification {
         }
       }
     })
-    val server = new NettyServer(connConfig, pipeline)
+    val server = new NettyServer(connConfig.connection, pipeline)
     server.connect()
     
 

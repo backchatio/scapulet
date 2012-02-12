@@ -77,8 +77,12 @@ object StreamErrors {
 
   object UnsupportedStanzaType extends StreamError("unsupported-stanza-type")
 
+  object UnsupportedFeature extends StreamError("unsupported-feature")
+
   object UnsupportedVersion extends StreamError("unsupported-version")
 
   object XmlNotWellFormed extends StreamError("xml-not-well-formed")
+
+  object Reset extends StreamError("reset")
 
 }

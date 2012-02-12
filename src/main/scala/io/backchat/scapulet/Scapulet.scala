@@ -9,6 +9,15 @@ import akka.event.LoggingAdapter
 import com.typesafe.config.Config
 import java.util.concurrent.TimeUnit
 
+object ComponentConfig {
+  def apply(config: Config): ComponentConfig =
+    new ComponentConfig(config.getString("name"), config.getString("description"), ConnectionConfig(config))
+}
+case class ComponentConfig(
+  name: String,
+  description: String,
+  connection: ConnectionConfig)
+
 object ConnectionConfig {
   def apply(config: Config): ConnectionConfig = {
     ConnectionConfig(
@@ -37,7 +46,7 @@ case class ConnectionConfig(
 
   def address = "%s.%s".format(userName, domain)
 
-  def asHexSecret(id: String) = StringUtil.hash("%s%s".format(id, password))
+  def asHexSecret(id: String) = (id + password).sha1Hex
 
   def socketAddress = new InetSocketAddress(host, port)
 }

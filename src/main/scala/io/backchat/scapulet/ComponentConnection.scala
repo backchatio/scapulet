@@ -116,7 +116,7 @@ object ComponentConnection {
   }
 }
 
-private[scapulet] class ComponentConnection(overrideConfig: Option[ConnectionConfig] = None, callback: Option[ActorRef] = None) extends ScapuletConnectionActor {
+private[scapulet] class ComponentConnection(overrideConfig: Option[ComponentConfig] = None, callback: Option[ActorRef] = None) extends ScapuletConnectionActor {
 
   def this() = this(None)
 
@@ -133,7 +133,10 @@ private[scapulet] class ComponentConnection(overrideConfig: Option[ConnectionCon
 
   override def postStop() {
     if (connection != null) connection.close()
-    logger info "XMPP component [%s] disconnected from host [%s:%d].".format(config.address, config.host, config.port)
+    logger info "XMPP component [%s] disconnected from host [%s:%d].".format(
+      config.connection.address,
+      config.connection.host,
+      config.connection.port)
   }
 
   override def preRestart(reason: Throwable, message: Option[Any]) {
@@ -146,7 +149,8 @@ private[scapulet] class ComponentConnection(overrideConfig: Option[ConnectionCon
     case Scapulet.Connect ⇒ {
       logger info "Starting netty client connection"
       implicit val system = context.system
-      if (connection == null) connection = new NettyClient(config, Channels.pipeline(new ComponentConnectionHandler(config)))
+      if (connection == null)
+        connection = new NettyClient(config.connection, Channels.pipeline(new ComponentConnectionHandler(config.connection)))
       connection.connect()
     }
     case Scapulet.Connected ⇒ {
