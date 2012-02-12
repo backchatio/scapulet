@@ -3,6 +3,7 @@ package io.backchat.scapulet
 import com.typesafe.config.Config
 import akka.actor._
 import akka.dispatch.Await
+import java.util.concurrent.ConcurrentHashMap
 
 object ScapuletExtension extends ExtensionId[ScapuletExtension] with ExtensionIdProvider {
   def lookup() = this
@@ -51,40 +52,29 @@ object ScapuletExtension extends ExtensionId[ScapuletExtension] with ExtensionId
     }
   }
 
-  class Component(val connection: ActorRef, system: ActorSystem) {
-    import akka.pattern.ask
-    implicit private val timeout = system.settings.ActorTimeout
-    private val registration = ComponentConnection.RegisterHandler
-    //    def registerHandler(name: String, predicate: Stanza.Predicate, handler: ⇒ ScapuletHandler): ActorRef = {
-    //      Await.result((connection ? registration(predicate, Props(handler), name)).mapTo[ActorRef], timeout.duration)
-    //    }
-    //
-    //    def registerHandler(name: String, handle: akka.actor.Actor.Receive): ActorRef = {
-    //      val predicate = Stanza.matching(name, { case x ⇒ handle.isDefinedAt(x) })
-    //      val handler = () ⇒ new ScapuletHandler {
-    //        protected def handleStanza = handle
-    //      }
-    //      registerHandler(name, predicate, handler())
-    //    }
-  }
-
   class ScapuletExtension(system: ExtendedActorSystem) {
     val settings = new ScapuletExtension.ScapuletSettings(system)
 
     private val guardian = system.actorOf(Props[Supervisor], "xmpp")
     import akka.pattern.ask
+
     implicit private val timeout = system.settings.ActorTimeout
 
     private val components = {
       Await.result((guardian ? CreateActor(Props[Supervisor], "components")).mapTo[ActorRef], timeout.duration)
     }
 
-    private[scapulet] def componentConnection(component: XmppComponent) = {
-      if (system.actorFor(components.path / component.id).isTerminated)
-        Await.result((components ? CreateActor(Props(new ComponentConnection(component)), component.id)).mapTo[ActorRef], timeout.duration)
-      else system.actorFor(components.path / component.id)
+    private[scapulet] def componentConnection(component: XmppComponent, overrideConfig: Option[ComponentConfig] = None, callback: Option[ActorRef] = None) = {
+      Await.result((components ? CreateActor(Props(new ComponentConnection(component, overrideConfig, callback)), component.id)).mapTo[ActorRef], timeout.duration)
     }
 
+    def component(id: String) = {
+      require(system.settings.config.hasPath("scapulet.components." + id), "You must define the component in the configuration")
+      val comp = system.actorFor(components.path / id)
+      if (comp.isTerminated) {
+        XmppComponent(id)(system)
+      } else Await.result((comp ? ComponentConnection.Component).mapTo[XmppComponent], timeout.duration)
+    }
 
   }
 }

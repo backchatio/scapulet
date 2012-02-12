@@ -121,7 +121,7 @@ object Scapulet {
 
   case class ConnectionShutdown(cause: Throwable) extends ComponentConnectionMessage
 
-  case class Send(xml: Seq[Node]) extends ComponentConnectionMessage
+  case class Send(xml: NodeSeq) extends ComponentConnectionMessage
 
   case class SendFailed(stanza: NodeSeq) extends ComponentConnectionMessage
 

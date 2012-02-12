@@ -24,7 +24,8 @@ libraryDependencies ++= Seq(
   compilerPlugin("org.scala-lang.plugins" % "continuations" % "2.9.1"),
   compilerPlugin("org.scala-tools.sxr" % "sxr_2.9.0" % "0.2.7"),
   "junit" % "junit" % "4.10" % "test",
-  "org.specs2" %% "specs2" % "1.7.1" % "test"
+  "org.specs2" %% "specs2" % "1.7.1" % "test",
+  "org.mockito" % "mockito-all" % "1.9.0" % "test"
 )
 
 resolvers += "Akka Releases" at "http://akka.io/releases/"

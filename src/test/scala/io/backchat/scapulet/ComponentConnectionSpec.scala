@@ -7,6 +7,7 @@ import akka.util.duration._
 import org.jboss.netty.channel._
 import akka.testkit._
 import org.jboss.netty.buffer.{ChannelBuffers, ChannelBuffer}
+import org.specs2.mock.Mockito
 
 class ComponentConnectionSpec extends AkkaSpecification {
   def is = sequential ^
@@ -35,7 +36,7 @@ class ComponentConnectionSpec extends AkkaSpecification {
 
   def specify(authMode: String = "pass") = new XmppServerContext(authMode)
 
-  class XmppServerContext(authMode: String) extends After {
+  class XmppServerContext(authMode: String) extends After with Mockito {
     
     implicit val executor = system.dispatcher
     val probe = TestProbe()
@@ -95,9 +96,9 @@ class ComponentConnectionSpec extends AkkaSpecification {
     server.connect()
     
 
-    val conn = system.actorOf(Props(new ComponentConnection(Some(connConfig))), "component")
-    conn ! ActorHandler(Stanza.matching.AllStanzas, allStanzas.ref)
-    conn ! ActorHandler(Stanza.matching("none", { case _ => false }), handleNone.ref)
+    val conn = system.actorOf(Props(new ComponentConnection(mock[XmppComponent], Some(connConfig))), "component")
+    conn ! Handler(Stanza.matching.AllStanzas, allStanzas.ref)
+    conn ! Handler(Stanza.matching("none", { case _ => false }), handleNone.ref)
     
     def after = {
       system stop conn

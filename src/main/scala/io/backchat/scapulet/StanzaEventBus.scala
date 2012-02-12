@@ -8,7 +8,7 @@ import scala.collection.JavaConverters._
 object Stanza {
   trait Predicate {
     def name: String
-    def apply(evt: NodeSeq): Boolean
+    def apply(evt: Node): Boolean
     override def equals(obj: Any) = obj match {
       case pred: Predicate ⇒ pred.name == name
       case _               ⇒ false
@@ -27,7 +27,7 @@ object Stanza {
 
     object AllStanzas extends Predicate {
       val name = "all-stanzas"
-      def apply(evt: NodeSeq) = true
+      def apply(evt: Node) = true
 
       override def &&(other: Predicate): Predicate = other
 
@@ -38,18 +38,18 @@ object Stanza {
       private val allPredicates = Vector((predicate +: predicates): _*)
       val name = allPredicates sortBy (_.name) mkString "::"
 
-      def apply(evt: NodeSeq) = allPredicates forall (_ apply evt)
+      def apply(evt: Node) = allPredicates forall (_ apply evt)
     }
 
     private[Stanza] class ForAnyPredicate(predicate: Predicate, predicates: Predicate*) extends Predicate {
       private val allPredicates = Vector((predicate +: predicates): _*)
       val name = allPredicates sortBy (_.name) mkString "||"
 
-      def apply(evt: NodeSeq) = allPredicates exists (_ apply evt)
+      def apply(evt: Node) = allPredicates exists (_ apply evt)
     }
 
     private[Stanza] class PartialFunctionPredicate(val name: String, pf: PartialFunction[NodeSeq, Boolean]) extends Predicate {
-      def apply(evt: NodeSeq) = pf.isDefinedAt(evt) && pf(evt)
+      def apply(evt: Node) = pf.isDefinedAt(evt) && pf(evt)
     }
 
     def apply(name: String, pf: PartialFunction[NodeSeq, Boolean]): Predicate =
@@ -59,7 +59,7 @@ object Stanza {
 
 }
 class StanzaEventBus extends EventBus with ActorEventBus {
-  type Event = NodeSeq
+  type Event = Node
   type Classifier = Stanza.Predicate
 
   private val subscriptions = new ConcurrentHashMap[Classifier, Set[Subscriber]]

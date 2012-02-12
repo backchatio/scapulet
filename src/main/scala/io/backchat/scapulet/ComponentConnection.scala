@@ -12,33 +12,56 @@ import akka.pattern.ask
 import akka.dispatch.{ Await, Future }
 import akka.util.duration._
 
-abstract class XmppComponent(val id: String)(implicit val system: ActorSystem) {
+object XmppComponent {
 
-  private implicit val timeout = system.settings.ActorTimeout
-  private var _handlers = Vector.empty[ScapuletHandler]
+  def apply(id: String, overrideConfig: Option[ComponentConfig] = None, callback: Option[ActorRef] = None)(implicit system: ActorSystem): io.backchat.scapulet.XmppComponent =
+    new XmppComponent(id, overrideConfig, callback)
 
-  def features: Seq[Feature] = {
-    val futures = _handlers map (h ⇒ (h.handler ? ScapuletHander.Messages.Features).mapTo[Seq[Feature]])
-    Await.result(Future.reduce(futures)((_: Seq[Feature]) ++ _), 2 seconds)
+  private[scapulet] class XmppComponent(val id: String, overrideConfig: Option[ComponentConfig] = None, callback: Option[ActorRef] = None)(implicit val system: ActorSystem) extends io.backchat.scapulet.XmppComponent {
+
+    import ScapuletHandler.Messages._
+    private implicit val timeout = system.settings.ActorTimeout
+    protected val connection = system.scapulet.componentConnection(this, overrideConfig, callback)
+
+    def features: Seq[Feature] = {
+      Await.result((connection ? Features).mapTo[Seq[Feature]], 2 seconds)
+    }
+
+    def identities: Seq[Identity] = {
+      Await.result((connection ? Identities).mapTo[Seq[Identity]], 2 seconds)
+    }
+
+    def register(handler: ScapuletHandler) = {
+      connection ! Register(handler)
+    }
+
+    def unregister(handler: ScapuletHandler) = {
+      connection ! Unregister(handler)
+    }
+
+    def stop() {
+      system stop connection
+    }
+
+    def write(node: Node) = connection ! node
   }
+}
 
-  def identities: Seq[Identity] = {
-    val futures = _handlers map (h ⇒ (h.handler ? ScapuletHander.Messages.Identities).mapTo[Seq[Identity]])
-    Await.result(Future.reduce(futures)((_: Seq[Identity]) ++ _), 2 seconds)
-  }
+trait XmppComponent {
 
-  def handlers: Seq[ScapuletHandler] = _handlers
+  def id: String
 
-  def +=(handler: ScapuletHandler) = {
-    _handlers :+= handler
-    handler
-  }
+  def features: Seq[Feature]
 
-  def -=(handler: ScapuletHandler) = {
-    _handlers = _handlers filterNot (_ == handler)
-    handler
-  }
+  def identities: Seq[Identity]
 
+  def register(handler: ScapuletHandler)
+
+  def unregister(handler: ScapuletHandler)
+
+  def stop()
+
+  def write(node: Node)
 }
 
 object ComponentConnection {
@@ -139,26 +162,23 @@ object ComponentConnection {
     }
   }
 
-  trait Handler {
-    def predicate: Predicate
-    def name: String
-  }
-  case class RegisterHandler(predicate: Predicate, handler: Props, name: String) extends Handler
-  case class ActorHandler(predicate: Predicate, handler: ActorRef) extends Handler {
-    def name = handler.path.toStringWithAddress(handler.path.address)
-  }
+  private[scapulet] case class Handler(predicate: Predicate, handler: ActorRef)
+  case object Component
+
 }
 
 private[scapulet] class ComponentConnection(component: XmppComponent, overrideConfig: Option[ComponentConfig] = None, callback: Option[ActorRef] = None) extends ScapuletConnectionActor {
 
-  def this() = this(None)
-
   import ComponentConnection._
+  import ScapuletHandler.Messages._
+
+  implicit val timeout = context.system.settings.ActorTimeout
+  implicit val executor = context.system.dispatcher
   val config = overrideConfig getOrElse context.system.scapulet.settings.component(self.path.name)
 
   private var connection: NettyClient = null
   private var authenticated = false
-  private var handlers = Vector.empty[Handler]
+  private var _handlers = Set.empty[Handler]
 
   override def preStart() {
     self ! Scapulet.Connect
@@ -201,24 +221,41 @@ private[scapulet] class ComponentConnection(component: XmppComponent, overrideCo
     }
     case Scapulet.Disconnected ⇒ context stop self
     case IncomingStanza(stanza) if authenticated ⇒ {
-      (handlers filter (_.predicate(stanza)) map (h ⇒ context.actorFor(h.name))).distinct foreach { _ ! stanza }
+      (_handlers filter (_.predicate(stanza)) map (_.handler)) foreach { _ ! stanza }
     }
     case _: IncomingStanza ⇒ throw new IllegalStateException("Received a stanza before being authenticated")
-    case h @ RegisterHandler(_, props, name) ⇒ {
-      val created = context.actorOf(props, name)
-      context watch created
-      handlers :+= h
-      sender ! created
-    }
-    case h: ActorHandler ⇒ {
-      handlers :+= h
-      context watch h.handler
-    }
     case Terminated(actor) ⇒ {
-      handlers = handlers filterNot {
-        case ActorHandler(_, h) ⇒ h == actor
-        case x                  ⇒ context.actorFor(x.name) == actor
+      _handlers = _handlers filterNot (_ == actor)
+    }
+    case Features ⇒ {
+      val replyTo = sender
+      val futures = _handlers map (h ⇒ (h.handler ? ScapuletHandler.Messages.Features).mapTo[Seq[Feature]])
+      Future.reduce(futures)((_: Seq[Feature]) ++ _) onSuccess {
+        case features ⇒ replyTo ! features
       }
+    }
+    case Identities ⇒ {
+      val replyTo = sender
+      val futures = _handlers map (h ⇒ (h.handler ? ScapuletHandler.Messages.Identities).mapTo[Seq[Identity]])
+      Future.reduce(futures)((_: Seq[Identity]) ++ _) onSuccess {
+        case identities ⇒ replyTo ! identities
+      }
+    }
+    case h: Handler ⇒ {
+      context.watch(h.handler)
+      _handlers += h
+    }
+    case Register(handler) ⇒ {
+      val predicate = Stanza.matching(handler.id + "-predicate", { case x ⇒ handler.handleStanza.isDefinedAt(x) })
+      val props = Props(new ScapuletHandler.ScapuletHandlerHost(handler))
+      val actor = context.actorOf(props, handler.id)
+      handler.actor = actor
+      context.watch(actor)
+      _handlers += Handler(predicate, actor)
+    }
+    case Component ⇒ sender ! component
+    case Unregister(handler) ⇒ {
+      context stop context.actorFor(handler.id)
     }
   }
 }

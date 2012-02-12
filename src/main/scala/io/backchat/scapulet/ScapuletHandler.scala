@@ -6,19 +6,41 @@ import akka.actor._
 import Actor.Receive
 import xml.{ NodeSeq, Elem, Node }
 
-object ScapuletHander {
+object ScapuletHandler {
 
   object Messages {
-    sealed trait ScapuletHanderMessage
-    case object Features extends ScapuletHanderMessage
-    case object Identities extends ScapuletHanderMessage
+    sealed trait ScapuletHandlerMessage
+    case object Features extends ScapuletHandlerMessage
+    case object Identities extends ScapuletHandlerMessage
+    case class Register(handler: ScapuletHandler) extends ScapuletHandlerMessage
+    case class Unregister(handler: ScapuletHandler) extends ScapuletHandlerMessage
+  }
+
+  private[scapulet] class ScapuletHandlerHost(handler: ScapuletHandler) extends ScapuletConnectionActor {
+    import Messages._
+    protected def receive = internalQueries orElse handler.handleStanza orElse shuttingDown
+
+    protected def shuttingDown: Receive = {
+      case Disconnecting ⇒ {
+        sender ! NodeSeq.Empty
+      }
+      case Connected | Reconnecting ⇒ {
+        sender ! NodeSeq.Empty
+      }
+    }
+
+    protected def internalQueries: Receive = {
+      case Features   ⇒ sender ! handler.features
+      case Identities ⇒ sender ! handler.identities
+      case m: Send    ⇒ context.parent ! m
+    }
+
   }
 }
 
-trait ScapuletHandler extends ScapuletConnectionActor with ErrorReply with ReplyMethods {
-  import ScapuletHander.Messages._
+abstract class ScapuletHandler(val id: String)(implicit protected val system: ActorSystem) extends ErrorReply with ReplyMethods with Logging {
 
-  def id: String
+  private[scapulet] implicit var actor: ActorRef = _
   def features: Seq[Feature]
   def identities: Seq[Identity]
 
@@ -26,7 +48,7 @@ trait ScapuletHandler extends ScapuletConnectionActor with ErrorReply with Reply
     val m: NodeSeq = msg
     if (!m.isEmpty) {
       logger debug "Replying with:\n%s".format(m.map(_.toString).mkString("\n"))
-      context.parent ! Send(m)
+      actor ! Send(m)
     }
   }
 
@@ -43,22 +65,6 @@ trait ScapuletHandler extends ScapuletConnectionActor with ErrorReply with Reply
     }
   }
 
-  protected def handleStanza: Receive
-
-  protected def shuttingDown: Receive = {
-    case Disconnecting ⇒ {
-      sender ! NodeSeq.Empty
-    }
-    case Connected | Reconnecting ⇒ {
-      sender ! NodeSeq.Empty
-    }
-  }
-
-  protected def nameMe: Receive = {
-    case Features   ⇒ sender ! features
-    case Identities ⇒ sender ! identities
-  }
-
-  protected def receive = handleStanza orElse shuttingDown
+  def handleStanza: Receive
 
 }
