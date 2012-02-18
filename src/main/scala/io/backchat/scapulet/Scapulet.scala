@@ -16,10 +16,13 @@ object ComponentConfig {
 case class ComponentConfig(
   name: String,
   description: String,
-  connection: ConnectionConfig)
+  connection: ConnectionConfig,
+  requestTimeout: Duration = 5 seconds)
 
 object ConnectionConfig {
-  def apply(config: Config): ConnectionConfig = {
+
+  def apply(config: Config): ConnectionConfig = apply(config, None)
+  def apply(config: Config, callback: Option[ActorRef]): ConnectionConfig = {
     ConnectionConfig(
       config.getString("userName"),
       config.getString("password"),
@@ -28,8 +31,7 @@ object ConnectionConfig {
       config.getString("domain").blankOpt,
       Duration(config.getMilliseconds("connectionTimeout"), TimeUnit.MILLISECONDS),
       Duration(config.getMilliseconds("reconnectDelay"), TimeUnit.MILLISECONDS),
-      None,
-      config.getInt("maxThreads"))
+      callback)
   }
 }
 case class ConnectionConfig(
@@ -40,8 +42,7 @@ case class ConnectionConfig(
     virtualHost: Option[String] = None,
     connectionTimeout: Duration = 10 seconds,
     reconnectDelay: Duration = 5 seconds,
-    connectionCallback: Option[ActorRef] = None,
-    maxThreads: Int = 25) extends NotNull {
+    connectionCallback: Option[ActorRef] = None) extends NotNull {
   def domain = virtualHost getOrElse host
 
   def address = "%s.%s".format(userName, domain)
@@ -81,7 +82,7 @@ object Scapulet {
 
     def address = "%s@%s".format(connectionConfig.userName, domain)
 
-    def asHexSecret(id: String) = StringUtil.hash("%s%s".format(id, connectionConfig.password))
+    def asHexSecret(id: String) = "%s%s".format(id, connectionConfig.password).sha1Hex
 
     def socketAddress = connectionConfig.socketAddress
   }
@@ -91,16 +92,6 @@ object Scapulet {
   trait ScapuletConnection {
     def write(stanza: Seq[Node]): Unit
   }
-
-  sealed trait ScapuletMessage
-
-  case class RegisterHandler(module: ActorRef) extends ScapuletMessage
-
-  case class RegisteredHandler(module: ActorRef) extends ScapuletMessage
-
-  case class UnregisterHandler(module: ActorRef) extends ScapuletMessage
-
-  case class UnregisteredHandler(module: ActorRef) extends ScapuletMessage
 
   sealed trait ComponentConnectionMessage
 
@@ -117,15 +108,15 @@ object Scapulet {
 
   case object Disconnect extends ComponentConnectionMessage
 
-  case class Failure(cause: Throwable) extends ComponentConnectionMessage
+  //  case class Failure(cause: Throwable) extends ComponentConnectionMessage
+  //
+  //  case class ConnectionShutdown(cause: Throwable) extends ComponentConnectionMessage
 
-  case class ConnectionShutdown(cause: Throwable) extends ComponentConnectionMessage
+  //  case class Send(xml: NodeSeq) extends ComponentConnectionMessage
 
-  case class Send(xml: NodeSeq) extends ComponentConnectionMessage
-
-  case class SendFailed(stanza: NodeSeq) extends ComponentConnectionMessage
-
-  case class Sent(xml: NodeSeq) extends ComponentConnectionMessage
+  //  case class SendFailed(stanza: NodeSeq) extends ComponentConnectionMessage
+  //
+  //  case class Sent(xml: NodeSeq) extends ComponentConnectionMessage
   //
   //  def makeComponentConnection(connectionConfig: ConnectionConfig) = {
   //    val conn = new FaultTolerantComponentConnection(connectionConfig)

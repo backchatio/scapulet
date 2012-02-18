@@ -3,6 +3,8 @@ package io.backchat.scapulet
 import _root_.org.jboss.netty.handler.codec.base64.Base64
 import xml._
 import _root_.org.jboss.netty.buffer.ChannelBuffers
+import akka.util.Crypt
+import java.util.Locale
 
 object CoreExt {
 
@@ -45,7 +47,7 @@ object CoreExt {
 
     private[scapulet] def isNotNull = s != null
 
-    def sha1Hex = StringUtil.hash(s)
+    def sha1Hex = Crypt.sha1(s.getBytes(Utf8)).toLowerCase(Locale.ENGLISH)
 
   }
 

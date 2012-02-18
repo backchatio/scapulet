@@ -3,7 +3,6 @@ package io.backchat.scapulet
 import com.typesafe.config.Config
 import akka.actor._
 import akka.dispatch.Await
-import java.util.concurrent.ConcurrentHashMap
 
 object ScapuletExtension extends ExtensionId[ScapuletExtension] with ExtensionIdProvider {
   def lookup() = this
@@ -19,8 +18,6 @@ object ScapuletExtension extends ExtensionId[ScapuletExtension] with ExtensionId
   }
 
   class ScapuletSettings(system: ExtendedActorSystem) {
-
-    //    val eventStream = new StanzaEventBus
 
     private val cfg = system.settings.config
 
@@ -58,23 +55,18 @@ object ScapuletExtension extends ExtensionId[ScapuletExtension] with ExtensionId
     private val guardian = system.actorOf(Props[Supervisor], "xmpp")
     import akka.pattern.ask
 
-    implicit private val timeout = system.settings.ActorTimeout
+    implicit private val timeout = system.settings.CreationTimeout
 
-    private val components = {
+    private[scapulet] val components = {
       Await.result((guardian ? CreateActor(Props[Supervisor], "components")).mapTo[ActorRef], timeout.duration)
     }
 
-    private[scapulet] def componentConnection(component: XmppComponent, overrideConfig: Option[ComponentConfig] = None, callback: Option[ActorRef] = None) = {
-      Await.result((components ? CreateActor(Props(new ComponentConnection(component, overrideConfig, callback)), component.id)).mapTo[ActorRef], timeout.duration)
+    private[scapulet] def componentConnection(id: String, overrideConfig: Option[ComponentConfig] = None) = {
+      val props = Props(new ComponentConnection(overrideConfig)).withDispatcher("component-connection-dispatcher")
+      Await.result((components ? CreateActor(props, id)).mapTo[ActorRef], timeout.duration)
     }
 
-    def component(id: String) = {
-      require(system.settings.config.hasPath("scapulet.components." + id), "You must define the component in the configuration")
-      val comp = system.actorFor(components.path / id)
-      if (comp.isTerminated) {
-        XmppComponent(id)(system)
-      } else Await.result((comp ? ComponentConnection.Component).mapTo[XmppComponent], timeout.duration)
-    }
+    def component(id: String) = XmppComponent(id)(system)
 
   }
 }

@@ -96,9 +96,9 @@ class ComponentConnectionSpec extends AkkaSpecification {
     server.connect()
     
 
-    val conn = system.actorOf(Props(new ComponentConnection(mock[XmppComponent], Some(connConfig))), "component")
-    conn ! Handler(Stanza.matching.AllStanzas, allStanzas.ref)
-    conn ! Handler(Stanza.matching("none", { case _ => false }), handleNone.ref)
+    val conn = system.actorOf(Props(new ComponentConnection(Some(connConfig))), "component")
+    conn ! Handler(Stanza.matching.AllStanzas, _ => false, allStanzas.ref)
+    conn ! Handler(Stanza.matching("none", { case _ => false }), _ => false, handleNone.ref)
     
     def after = {
       system stop conn

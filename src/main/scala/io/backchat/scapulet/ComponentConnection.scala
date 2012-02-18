@@ -9,59 +9,146 @@ import xml._
 import jivesoftware.openfire.nio.XMLLightweightParser
 import io.backchat.scapulet.Stanza.Predicate
 import akka.pattern.ask
-import akka.dispatch.{ Await, Future }
 import akka.util.duration._
+import akka.util.{ Duration, Timeout }
+import java.util.concurrent.TimeoutException
+import com.typesafe.config.Config
+import akka.dispatch.{ UnboundedPriorityMailbox, PriorityGenerator, Await, Future }
 
 object XmppComponent {
 
-  def apply(id: String, overrideConfig: Option[ComponentConfig] = None, callback: Option[ActorRef] = None)(implicit system: ActorSystem): io.backchat.scapulet.XmppComponent =
-    new XmppComponent(id, overrideConfig, callback)
+  def apply(
+    id: String,
+    overrideConfig: Option[ComponentConfig] = None)(implicit system: ActorSystem): io.backchat.scapulet.XmppComponent = {
+    require(overrideConfig.isDefined || system.settings.config.hasPath("scapulet.components." + id), "You must define the component in the configuration")
+    val retrieved = system.actorFor(system.scapulet.components.path / id)
+    val comp = if (retrieved.isTerminated) {
+      system.scapulet.componentConnection(id, overrideConfig)
+    } else retrieved
+    new XmppComponent(id, comp)
+  }
 
-  private[scapulet] class XmppComponent(val id: String, overrideConfig: Option[ComponentConfig] = None, callback: Option[ActorRef] = None)(implicit val system: ActorSystem) extends io.backchat.scapulet.XmppComponent {
+  private[scapulet] class XmppComponent(val id: String, component: ActorRef)(implicit val system: ActorSystem) extends io.backchat.scapulet.XmppComponent {
 
-    import ScapuletHandler.Messages._
-    private implicit val timeout = system.settings.ActorTimeout
-    protected val connection = system.scapulet.componentConnection(this, overrideConfig, callback)
+    import StanzaHandler.Messages._
+
+    private val duration: Duration = 2 seconds
+
+    private implicit val timeout = Timeout(duration)
 
     def features: Seq[Feature] = {
-      Await.result((connection ? Features).mapTo[Seq[Feature]], 2 seconds)
+      ask[Seq[Feature]](features)
     }
 
     def identities: Seq[Identity] = {
-      Await.result((connection ? Identities).mapTo[Seq[Identity]], 2 seconds)
+      ask[Seq[Identity]](Identities)
     }
 
-    def register(handler: ScapuletHandler) = {
-      connection ! Register(handler)
+    def register(handler: StanzaHandler) = {
+      component ! Register(handler)
     }
 
-    def unregister(handler: ScapuletHandler) = {
-      connection ! Unregister(handler)
+    def unregister(handler: StanzaHandler) = {
+      component ! Unregister(handler)
     }
 
     def stop() {
-      system stop connection
+      system stop component
     }
 
-    def write(node: Node) = connection ! node
+    def send(node: Node) = component ! node
+
+    def ask[TResult](msg: Any)(implicit mf: Manifest[TResult]) = {
+      Await.result((component ? msg).mapTo[TResult], duration)
+    }
   }
 }
 
+/**
+ * A XMPP Component API convenience interface
+ * You can get an instance of this component by asking the actor system extension for a component by id
+ * {{
+ *  system.scapulet.component("weather")
+ * }}
+ *
+ * Once a component has been started and set up you can also get a component by requesting it by actor path
+ * {{
+ *   system.actorFor("/user/xmpp/components/weather")
+ * }}
+ */
 trait XmppComponent {
 
+  /**
+   * The ID this component is known by and by which it can be looked up. This id is the id you put in the
+   * config to configure the component.
+   * You can get a component by requesting it by id from the actor system extension or by actor path
+   *
+   * @return a string representing the component id
+   */
   def id: String
 
+  /**
+   * gets the list of features this components supports, this is used in the built-in service discovery
+   *
+   * @return a sequence of [[io.backchat.scapulet.stanza.Feature]]
+   */
   def features: Seq[Feature]
 
+  /**
+   * gets the list of identities for this component, this is used in the built-in service discovery
+   *
+   * @return a sequence of [[io.backchat.scapulet.stanza.Feature]]
+   */
   def identities: Seq[Identity]
 
-  def register(handler: ScapuletHandler)
+  /**
+   * Register a new stanza handler with this component.
+   * As soon as the handler is registered it will participate in the incoming stanza handling.
+   *
+   * @param handler The new [[io.backchat.scapulet.StanzaHandler]]
+   */
+  def register(handler: StanzaHandler): Unit
 
-  def unregister(handler: ScapuletHandler)
+  /**
+   * Unregister a stanza handler.
+   * @param handler
+   */
+  def unregister(handler: StanzaHandler): Unit
 
-  def stop()
+  /**
+   * Stop this component
+   */
+  def stop(): Unit
 
-  def write(node: Node)
+  /**
+   * Sends a xml snippet to this components connection
+   *
+   * @param node A [[scala.xml.Node]]
+   */
+  def send(node: Node): Unit
+
+  /**
+   * @see this#send
+   */
+  def !(node: Node): Unit = send(node)
+
+  /**
+   * Sends the connection a message and returns a result.
+   *
+   * @param msg The message to get a reply for
+   * @param mf  implicit parameter for the manfest of the result type
+   * @tparam TResult the result type of the ask operation
+   * @throws java.util.concurrent.TimeoutException
+   * @return an instance of TResult
+   */
+  @throws(classOf[TimeoutException])
+  def ask[TResult](msg: Any)(implicit mf: Manifest[TResult]): TResult
+
+  /**
+   * @see this#ask
+   */
+  @throws(classOf[TimeoutException])
+  def ?[TResult](msg: Any)(implicit mf: Manifest[TResult]): TResult = ask(msg)
 }
 
 object ComponentConnection {
@@ -162,109 +249,154 @@ object ComponentConnection {
     }
   }
 
-  private[scapulet] case class Handler(predicate: Predicate, handlesQuery: Any => Boolean, handler: ActorRef)
-  case object Component
+  private[scapulet] case class Handler(predicate: Predicate, handlesQuery: Any ⇒ Boolean, handler: ActorRef)
 
-  class ComponentConnectionHandle()
+  class ComponentConnectionHandle(compontentId: String, config: ConnectionConfig) extends ScapuletConnectionActor {
+
+    private var connection: NettyClient = null
+    private var authenticated = false
+
+    override def postStop() {
+      if (connection != null) connection.close()
+      logger info "XMPP component [%s] disconnected from host [%s:%d].".format(
+        config.address,
+        config.host,
+        config.port)
+    }
+
+    override def preRestart(reason: Throwable, message: Option[Any]) {
+      logger error (reason, "Reconnecting after connection problem")
+      super.preRestart(reason, message)
+    }
+
+    protected def receive = {
+      case xml: NodeSeq if authenticated ⇒ connection.write(xml)
+      case xml: NodeSeq ⇒ {
+        logger warning ("Can't send xml before a connection has been established, dropping:\n{}", xml.toString)
+      }
+      case Scapulet.Connect ⇒ {
+        logger info "Starting netty client connection"
+        implicit val system = context.system
+        if (connection == null)
+          connection = new NettyClient(config, Channels.pipeline(new ComponentConnectionHandler(config)))
+        connection.connect()
+      }
+      case Scapulet.Connected ⇒ {
+        logger info "[%s] XMPP component session established".format(context.parent.path.name)
+        authenticated = true
+        context.parent ! Scapulet.Connected
+      }
+      case Scapulet.Reconnect ⇒ {
+        connection.reconnect()
+      }
+      case Scapulet.Disconnect ⇒ {
+        context.parent ! Scapulet.Disconnect
+        connection.disconnect()
+      }
+      case Scapulet.Disconnected                ⇒ context.parent ! Scapulet.Disconnected
+      case evt: IncomingStanza if authenticated ⇒ context.parent ! evt
+      case evt: IncomingStanza ⇒ {
+        logger warning ("Received a stanza while not authenticated, that's wrong. The stanza:\n{}", evt)
+      }
+
+    }
+  }
+
+  val priorityGenerator = PriorityGenerator {
+    case _: StanzaHandler.Messages.ScapuletHandlerRequest ⇒ 10
+    case PoisonPill ⇒ 1000
+    case _: IncomingStanza ⇒ 100
+    case _ ⇒ 50
+  }
+
+  class Mailbox(config: Config) extends UnboundedPriorityMailbox(priorityGenerator)
 }
 
-private[scapulet] class ComponentConnection(component: XmppComponent, overrideConfig: Option[ComponentConfig] = None, callback: Option[ActorRef] = None) extends ScapuletConnectionActor {
+private[scapulet] class ComponentConnection(
+    overrideConfig: Option[ComponentConfig] = None) extends ScapuletConnectionActor {
 
   import ComponentConnection._
-  import ScapuletHandler.Messages._
+  import StanzaHandler.Messages._
 
-  implicit val timeout = context.system.settings.ActorTimeout
   implicit val executor = context.system.dispatcher
   val config = overrideConfig getOrElse context.system.scapulet.settings.component(self.path.name)
 
-  private var connection: NettyClient = null
-  private var authenticated = false
+  protected val callback = config.connection.connectionCallback
+
+  implicit val timeout = Timeout(config.requestTimeout)
+
   private var _handlers = Set.empty[Handler]
+
+  protected def connection = context.actorFor("connection")
 
   override def preStart() {
     self ! Scapulet.Connect
   }
 
-  override def postStop() {
-    if (connection != null) connection.close()
-    logger info "XMPP component [%s] disconnected from host [%s:%d].".format(
-      config.connection.address,
-      config.connection.host,
-      config.connection.port)
-  }
+  protected def receive = handlerMessages orElse connectionMessages orElse lifeCycleMessages
 
-  override def preRestart(reason: Throwable, message: Option[Any]) {
-    logger error (reason, "Reconnecting after connection problem")
-    super.preRestart(reason, message)
-  }
-
-  protected def receive = {
-    case xml: NodeSeq ⇒ connection.write(xml)
-    case Scapulet.Connect ⇒ {
-      logger info "Starting netty client connection"
-      implicit val system = context.system
-      if (connection == null)
-        connection = new NettyClient(config.connection, Channels.pipeline(new ComponentConnectionHandler(config.connection)))
-      connection.connect()
-      // TODO: Start handlers from configuration
-    }
-    case Scapulet.Connected ⇒ {
-      logger info "XMPP component session %s established".format(component.id)
-      authenticated = true
-      callback foreach { _ ! Scapulet.Connected }
-    }
-    case Scapulet.Reconnect ⇒ {
-      callback foreach { _ ! Scapulet.Reconnect }
-      connection.reconnect()
-    }
-    case Scapulet.Disconnect ⇒ {
-      callback foreach { _ ! Scapulet.Disconnect }
-      connection.disconnect()
-    }
-    case Scapulet.Disconnected ⇒ context stop self
-    case IncomingStanza(stanza) if authenticated ⇒ {
-      (_handlers filter (_.predicate(stanza)) map (_.handler)) foreach { _ ! stanza }
-    }
-    case _: IncomingStanza ⇒ throw new IllegalStateException("Received a stanza before being authenticated")
+  protected def lifeCycleMessages: Receive = {
     case Terminated(actor) ⇒ {
       _handlers = _handlers filterNot (_ == actor)
     }
+  }
+
+  protected def handlerMessages: Receive = {
     case m @ (_: ScapuletHandlerRequest) ⇒ query(_handlers, m)
-    case h: Handler ⇒ addHandler(h)
-    case Register(handler) ⇒ registerHandler(handler)
-    case Component ⇒ sender ! component
+    case h: Handler                      ⇒ addHandler(h)
+    case Register(handler)               ⇒ registerHandler(handler)
     case Unregister(handler) ⇒ {
       context stop context.actorFor(handler.handlerId)
     }
   }
-  
-  private def query[Response](handlers: Seq[Handler], msg: ScapuletHandlerMessage) {
+
+  protected def connectionMessages: Receive = {
+    case xml: NodeSeq ⇒ connection ! xml
+    case Scapulet.Connect ⇒ {
+      val c = if (connection.isTerminated) {
+        val conn = context.actorOf(Props(new ComponentConnectionHandle(self.path.name, config.connection)), "connection")
+        context.watch(conn)
+        conn
+      } else connection
+
+      c ! Scapulet.Connect
+    }
+    case Scapulet.Connected ⇒ {
+      callback foreach { _ ! Scapulet.Connected }
+    }
+    case Scapulet.Disconnect ⇒ {
+      callback foreach { _ ! Scapulet.Disconnect }
+    }
+    case Scapulet.Disconnected  ⇒ context stop self
+    case IncomingStanza(stanza) ⇒ macthingHandlers(stanza) foreach { _ ! stanza }
+  }
+
+  private def macthingHandlers(stanza: Node) = _handlers filter (_.predicate(stanza)) map (_.handler)
+
+  private def query[Response](handlers: Set[Handler], msg: ScapuletHandlerMessage)(implicit mf: Manifest[Response]) {
     val replyTo = sender
-    val futures = handlers map (h ⇒ (h.handler ? msg).mapTo[Seq[Feature]])
+    val futures = handlers map (h ⇒ (h.handler ? msg).mapTo[Seq[Response]])
     Future.reduce(futures)((_: Seq[Response]) ++ _) onSuccess {
       case results ⇒ replyTo ! results
     }
   }
-  
+
   private def addHandler(handler: Handler) = {
-    context.watch(h.handler)
-    _handlers += h    
+    context.watch(handler.handler)
+    _handlers += handler
   }
-  
-  private def registerHandler(scapuletHandler: ScapuletHandler) = {
+
+  private def registerHandler(scapuletHandler: StanzaHandler) = {
     val predicate = Stanza.matching(
-      scapuletHandler.handlerId + "-predicate", 
+      scapuletHandler.handlerId + "-predicate",
       { case x ⇒ scapuletHandler.handleStanza.isDefinedAt(x) })
-    val props = Props(new ScapuletHandler.ScapuletHandlerHost(handler))
+    val props = Props(new StanzaHandler.ScapuletHandlerHost(scapuletHandler)).withDispatcher("component-connection-dispatcher")
     val actor = context.actorOf(props, scapuletHandler.handlerId)
     scapuletHandler.actor = actor
     val recv = scapuletHandler.handleMeta(null)
-    val handlesQuery = (m: Any) => recv.isDefinedAt(m)
+    val handlesQuery = (m: Any) ⇒ recv.isDefinedAt(m)
     val handler = Handler(predicate, handlesQuery, actor)
     addHandler(handler)
   }
-  
-  private def nonServiceDiscoveryHandlers = _handlers filter {_.handler.path.name != "service-discovery" }
-  
 }
 

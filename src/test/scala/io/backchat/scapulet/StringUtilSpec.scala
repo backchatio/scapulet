@@ -7,7 +7,7 @@ class StringUtilSpec extends Specification {
 
     "The StringUtil should" ^
       "must hash a given string as hex" ! {
-        StringUtil.hash("the string") must_== "e8cc75db52457e014d354b54a2c44c30dd96cbd5"
+        "the string".sha1Hex must_== "e8cc75db52457e014d354b54a2c44c30dd96cbd5"
       } ^
       "must get the resource and barejid from a jid" ^
       "the resource must be Some(value) when there is a resource" ! {

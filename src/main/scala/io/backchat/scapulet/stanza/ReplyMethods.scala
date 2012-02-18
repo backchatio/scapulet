@@ -4,7 +4,7 @@ package stanza
 import xml._
 
 trait ReplyMethods {
-  self: ScapuletHandler ⇒
+  self: StanzaHandler ⇒
 
   import CoreExt._
 
@@ -19,7 +19,7 @@ trait ReplyMethods {
    *
    * @return a NodeSeq representing the stanza
    */
-  protected def iqReply[TNode <: NodeSeq](ns: String, id: String, from: String, to: String)(content: => NodeSeq) = {
+  protected def iqReply[TNode <: NodeSeq](ns: String, id: String, from: String, to: String)(content: ⇒ NodeSeq) = {
     <iq type="result" id={ id } to={ to } from={ from }>
       <query xmlns={ ns }>
         { content }

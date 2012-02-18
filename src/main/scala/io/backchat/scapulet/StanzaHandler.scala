@@ -6,7 +6,7 @@ import akka.actor._
 import Actor.Receive
 import xml.{ NodeSeq, Elem, Node }
 
-object ScapuletHandler {
+object StanzaHandler {
 
   object Messages {
     sealed trait ScapuletHandlerMessage
@@ -17,11 +17,12 @@ object ScapuletHandler {
     case object Items extends ScapuletHandlerRequest
     case object ComponentInfos extends ScapuletHandlerRequest
     case object ServerInfos extends ScapuletHandlerRequest
-    case class Register(handler: ScapuletHandler) extends ScapuletHandlerMessage
-    case class Unregister(handler: ScapuletHandler) extends ScapuletHandlerMessage
+    case class Send(xml: Node) extends ScapuletHandlerMessage
+    case class Register(handler: StanzaHandler) extends ScapuletHandlerMessage
+    case class Unregister(handler: StanzaHandler) extends ScapuletHandlerMessage
   }
 
-  private[scapulet] class ScapuletHandlerHost(handler: ScapuletHandler) extends ScapuletConnectionActor {
+  private[scapulet] class ScapuletHandlerHost(handler: StanzaHandler) extends ScapuletConnectionActor {
     import Messages._
     protected def receive = internalQueries orElse handler.handleMeta(sender) orElse handler.handleStanza orElse shuttingDown
 
@@ -33,48 +34,45 @@ object ScapuletHandler {
         sender ! NodeSeq.Empty
       }
     }
-    
-    
 
-    protected[scalatra] def internalQueries: Receive = {
-      case m if handler.serviceDiscoveryAware && serviceDiscoveryQueries.isDefinedAt(m) => sender ! m
-      case m: Send    ⇒ context.parent ! m
+    protected[scapulet] def internalQueries: Receive = {
+      case m if handler.serviceDiscoveryAware && serviceDiscoveryQueries.isDefinedAt(m) ⇒ sender ! m
+      case Send(response) ⇒ context.parent ! response
     }
-    
+
     private val serviceDiscoveryQueries: Receive = {
-      case Features   ⇒ sender ! handler.features
-      case Identities ⇒ sender ! handler.identities
-      case ComponentInfos => sender ! handler.componentInfos
-      case Infos => sender ! handler.infos
-      case ServerInfos => sender ! handler.serverInfos
-      case Items => sender ! handler.items
+      case Features       ⇒ sender ! handler.features
+      case Identities     ⇒ sender ! handler.identities
+      case ComponentInfos ⇒ sender ! handler.componentInfos
+      case Infos          ⇒ sender ! handler.infos
+      case ServerInfos    ⇒ sender ! handler.serverInfos
+      case Items          ⇒ sender ! handler.items
     }
-    
 
   }
 }
 
-abstract class ScapuletHandler(val handlerId: String)(implicit protected val system: ActorSystem) extends ErrorReply with ReplyMethods with Logging {
+abstract class StanzaHandler(val handlerId: String)(implicit protected val system: ActorSystem) extends ErrorReply with ReplyMethods with Logging {
 
-  import ScapuletHandler.Messages._
+  import StanzaHandler.Messages._
   private[scapulet] implicit var actor: ActorRef = _
   def features: Seq[Feature]
   def identities: Seq[Identity]
-  
+
   def componentInfos: NodeSeq = (features map (_.toXml)) ++ (identities map (_.toXml))
   def items: NodeSeq = NodeSeq.Empty
   def infos: NodeSeq = NodeSeq.Empty
   def serverInfos: NodeSeq = NodeSeq.Empty
 
-  protected def replyWith(msg: ⇒ NodeSeq) = {
-    val m: NodeSeq = msg
+  protected def replyWith(msg: ⇒ Node) = {
+    val m: Node = msg
     if (!m.isEmpty) {
       logger debug "Replying with:\n%s".format(m.map(_.toString).mkString("\n"))
       actor ! Send(m)
     }
   }
 
-  protected def safeReplyWith(from: String, to: String, include: Option[Elem] = None)(msg: ⇒ NodeSeq) = {
+  protected def safeReplyWith(from: String, to: String, include: Option[Elem] = None)(msg: ⇒ Node) = {
     replyWith {
       try {
         msg
@@ -89,10 +87,8 @@ abstract class ScapuletHandler(val handlerId: String)(implicit protected val sys
 
   def handleStanza: Receive
 
-  def handleMeta(sender: => ActorRef): Receive = { case "alwaysfail" => throw new UnsupportedOperationException("Received an impossible message of 'alwaysfail'") }
-  
+  def handleMeta(sender: ⇒ ActorRef): Receive = { case "alwaysfail" ⇒ throw new UnsupportedOperationException("Received an impossible message of 'alwaysfail'") }
+
   def serviceDiscoveryAware = true
 }
-
-
 

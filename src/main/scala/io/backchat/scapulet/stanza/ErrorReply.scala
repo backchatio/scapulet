@@ -4,7 +4,7 @@ package stanza
 import xml.{ NodeSeq, Elem }
 
 trait ErrorReply {
-  self: ScapuletHandler ⇒
+  self: StanzaHandler ⇒
 
   protected def noNicknameSpecified(from: String, to: String, includes: Option[Elem] = None) =
     error(from, to, includes, "modify", <jid-malformed xmlns={ ns.Stanza }/>)
