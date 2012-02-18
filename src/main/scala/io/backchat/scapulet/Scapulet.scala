@@ -25,7 +25,7 @@ object ConnectionConfig {
       config.getString("password"),
       config.getString("host"),
       config.getInt("port"),
-      config.getString("virtualHost").blankOpt,
+      config.getString("domain").blankOpt,
       Duration(config.getMilliseconds("connectionTimeout"), TimeUnit.MILLISECONDS),
       Duration(config.getMilliseconds("reconnectDelay"), TimeUnit.MILLISECONDS),
       None,

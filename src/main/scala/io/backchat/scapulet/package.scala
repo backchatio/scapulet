@@ -28,6 +28,9 @@ package object scapulet {
     val Sasl = "urn:ietf:params:xml:ns:xmpp-sasl"
     val XmppStream = "urn:ietf:params:xml:ns:xmpp-streams"
     val Compression = "http ://jabber.org/features/compress"
+    val DiscoInfo = "http://jabber.org/protocol/disco#info"
+    val DiscoItems = "http://jabber.org/protocol/disco#items"
+    val ProtocolCommands = "http://jabber.org/protocol/commands"
 
     object component {
       val Accept = "jabber:component:accept"

@@ -4,14 +4,6 @@ Scapulet is an XMPP library that currently supports XEP-0114 for components and 
 It uses the standard scala library for parsing xml so you can match against it using the xml snippets.
 It uses akka for concurrency and fault-tolerance.
 
-The main motivation for writing this was that all libraries I used so far only work well if you want to write a bot, or
-don't work with all jabber clients etc. Most of them also insist on writing their own xml parser where IMO that's not
-the place where most of the time is spent.
-
-I've used this library to create a MUC component which we needed and now I need to create a pubsub component so I'm finding 
-which things need to be shared and those are being put in this library.   
-Currently I'm working towards implementing XEP-0060
-
 There is a google group for your questions: [Mailing List](http://groups.google.com/group/scapulet-user)
 There is also an irc channel: <irc://irc.freenode.net/scapulet>  
 
@@ -37,11 +29,14 @@ scapulet {
       port = 34827
       userName = "weather"
       password = "demo"
-      virtualHost = "jabber.local"
+      domain = "jabber.local"
     }
   }
 }
 ```
+
+With that config you can get a hold of the component handle which you can use to register the handlers that will make up
+your actual component. Those handlers will be made so they too are configurable.
 
 ```scala
 import io.backchat.scapulet._
@@ -85,4 +80,4 @@ The example won't actually work in an XMPP context, we would have to switch the 
 
 ## Copyright
 
-Copyright (c) 2010 Mojolly Ltd. See [LICENSE](https://github.com/mojolly/scapulet/raw/HEAD/LICENSE) for details.
+Copyright (c) 2010 Mojolly Ltd. See the [LICENSE](https://github.com/mojolly/scapulet/raw/HEAD/LICENSE) for details.

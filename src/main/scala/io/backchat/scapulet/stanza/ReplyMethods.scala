@@ -19,7 +19,7 @@ trait ReplyMethods {
    *
    * @return a NodeSeq representing the stanza
    */
-  protected def iqReply[TNode <: NodeSeq](ns: String, id: String, from: String, to: String)(content: Seq[TNode]) = {
+  protected def iqReply[TNode <: NodeSeq](ns: String, id: String, from: String, to: String)(content: => NodeSeq) = {
     <iq type="result" id={ id } to={ to } from={ from }>
       <query xmlns={ ns }>
         { content }

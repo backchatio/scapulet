@@ -17,14 +17,16 @@ autoCompilerPlugins := true
 
 libraryDependencies ++= Seq(
   "org.gnu.inet" % "libidn" % "1.15",
+  "com.google.guava" % "guava" % "10.0.1",
   "io.netty" % "netty" % "3.3.1.Final",
-  "com.typesafe.akka" % "akka-file-mailbox" % "2.0-M4",
-  "com.typesafe.akka" % "akka-slf4j" % "2.0-M4" % "provided",
-  "com.typesafe.akka" % "akka-testkit" % "2.0-M4" % "test",
+  "com.typesafe.akka" % "akka-file-mailbox" % "2.0-RC1",
+  "com.typesafe.akka" % "akka-slf4j" % "2.0-RC1" % "provided",
+  "com.typesafe.akka" % "akka-testkit" % "2.0-RC1" % "test",
+  "org.apache.vysper" % "vysper-core" % "0.7" % "test",
   compilerPlugin("org.scala-lang.plugins" % "continuations" % "2.9.1"),
   compilerPlugin("org.scala-tools.sxr" % "sxr_2.9.0" % "0.2.7"),
   "junit" % "junit" % "4.10" % "test",
-  "org.specs2" %% "specs2" % "1.7.1" % "test",
+  "org.specs2" %% "specs2" % "1.8.1" % "test",
   "org.mockito" % "mockito-all" % "1.9.0" % "test"
 )
 
@@ -107,7 +109,7 @@ ScalariformKeys.preferences :=
         setPreference(PreserveSpaceBeforeArguments, true)
         setPreference(IndentWithTabs, false))
 
-(excludeFilter in ScalariformKeys.format) <<= (excludeFilter) (_ || "*Spec.scala")
+(excludeFilter in ScalariformKeys.format) <<= excludeFilter(_ || "*Spec.scala")
 
 testOptions in Test += Tests.Setup( () => System.setProperty("akka.mode", "test") )
 

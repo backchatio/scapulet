@@ -10,15 +10,20 @@ object ScapuletHandler {
 
   object Messages {
     sealed trait ScapuletHandlerMessage
-    case object Features extends ScapuletHandlerMessage
-    case object Identities extends ScapuletHandlerMessage
+    sealed trait ScapuletHandlerRequest extends ScapuletHandlerMessage
+    case object Features extends ScapuletHandlerRequest
+    case object Identities extends ScapuletHandlerRequest
+    case object Infos extends ScapuletHandlerRequest
+    case object Items extends ScapuletHandlerRequest
+    case object ComponentInfos extends ScapuletHandlerRequest
+    case object ServerInfos extends ScapuletHandlerRequest
     case class Register(handler: ScapuletHandler) extends ScapuletHandlerMessage
     case class Unregister(handler: ScapuletHandler) extends ScapuletHandlerMessage
   }
 
   private[scapulet] class ScapuletHandlerHost(handler: ScapuletHandler) extends ScapuletConnectionActor {
     import Messages._
-    protected def receive = internalQueries orElse handler.handleStanza orElse shuttingDown
+    protected def receive = internalQueries orElse handler.handleMeta(sender) orElse handler.handleStanza orElse shuttingDown
 
     protected def shuttingDown: Receive = {
       case Disconnecting ⇒ {
@@ -28,21 +33,38 @@ object ScapuletHandler {
         sender ! NodeSeq.Empty
       }
     }
+    
+    
 
-    protected def internalQueries: Receive = {
-      case Features   ⇒ sender ! handler.features
-      case Identities ⇒ sender ! handler.identities
+    protected[scalatra] def internalQueries: Receive = {
+      case m if handler.serviceDiscoveryAware && serviceDiscoveryQueries.isDefinedAt(m) => sender ! m
       case m: Send    ⇒ context.parent ! m
     }
+    
+    private val serviceDiscoveryQueries: Receive = {
+      case Features   ⇒ sender ! handler.features
+      case Identities ⇒ sender ! handler.identities
+      case ComponentInfos => sender ! handler.componentInfos
+      case Infos => sender ! handler.infos
+      case ServerInfos => sender ! handler.serverInfos
+      case Items => sender ! handler.items
+    }
+    
 
   }
 }
 
-abstract class ScapuletHandler(val id: String)(implicit protected val system: ActorSystem) extends ErrorReply with ReplyMethods with Logging {
+abstract class ScapuletHandler(val handlerId: String)(implicit protected val system: ActorSystem) extends ErrorReply with ReplyMethods with Logging {
 
+  import ScapuletHandler.Messages._
   private[scapulet] implicit var actor: ActorRef = _
   def features: Seq[Feature]
   def identities: Seq[Identity]
+  
+  def componentInfos: NodeSeq = (features map (_.toXml)) ++ (identities map (_.toXml))
+  def items: NodeSeq = NodeSeq.Empty
+  def infos: NodeSeq = NodeSeq.Empty
+  def serverInfos: NodeSeq = NodeSeq.Empty
 
   protected def replyWith(msg: ⇒ NodeSeq) = {
     val m: NodeSeq = msg
@@ -52,7 +74,7 @@ abstract class ScapuletHandler(val id: String)(implicit protected val system: Ac
     }
   }
 
-  protected def safeReplyWith(from: String, to: String, include: Option[Elem] = None)(msg: ⇒ Seq[Node]) = {
+  protected def safeReplyWith(from: String, to: String, include: Option[Elem] = None)(msg: ⇒ NodeSeq) = {
     replyWith {
       try {
         msg
@@ -67,4 +89,10 @@ abstract class ScapuletHandler(val id: String)(implicit protected val system: Ac
 
   def handleStanza: Receive
 
+  def handleMeta(sender: => ActorRef): Receive = { case "alwaysfail" => throw new UnsupportedOperationException("Received an impossible message of 'alwaysfail'") }
+  
+  def serviceDiscoveryAware = true
 }
+
+
+

@@ -162,9 +162,10 @@ object ComponentConnection {
     }
   }
 
-  private[scapulet] case class Handler(predicate: Predicate, handler: ActorRef)
+  private[scapulet] case class Handler(predicate: Predicate, handlesQuery: Any => Boolean, handler: ActorRef)
   case object Component
 
+  class ComponentConnectionHandle()
 }
 
 private[scapulet] class ComponentConnection(component: XmppComponent, overrideConfig: Option[ComponentConfig] = None, callback: Option[ActorRef] = None) extends ScapuletConnectionActor {
@@ -205,6 +206,7 @@ private[scapulet] class ComponentConnection(component: XmppComponent, overrideCo
       if (connection == null)
         connection = new NettyClient(config.connection, Channels.pipeline(new ComponentConnectionHandler(config.connection)))
       connection.connect()
+      // TODO: Start handlers from configuration
     }
     case Scapulet.Connected ⇒ {
       logger info "XMPP component session %s established".format(component.id)
@@ -227,36 +229,42 @@ private[scapulet] class ComponentConnection(component: XmppComponent, overrideCo
     case Terminated(actor) ⇒ {
       _handlers = _handlers filterNot (_ == actor)
     }
-    case Features ⇒ {
-      val replyTo = sender
-      val futures = _handlers map (h ⇒ (h.handler ? ScapuletHandler.Messages.Features).mapTo[Seq[Feature]])
-      Future.reduce(futures)((_: Seq[Feature]) ++ _) onSuccess {
-        case features ⇒ replyTo ! features
-      }
-    }
-    case Identities ⇒ {
-      val replyTo = sender
-      val futures = _handlers map (h ⇒ (h.handler ? ScapuletHandler.Messages.Identities).mapTo[Seq[Identity]])
-      Future.reduce(futures)((_: Seq[Identity]) ++ _) onSuccess {
-        case identities ⇒ replyTo ! identities
-      }
-    }
-    case h: Handler ⇒ {
-      context.watch(h.handler)
-      _handlers += h
-    }
-    case Register(handler) ⇒ {
-      val predicate = Stanza.matching(handler.id + "-predicate", { case x ⇒ handler.handleStanza.isDefinedAt(x) })
-      val props = Props(new ScapuletHandler.ScapuletHandlerHost(handler))
-      val actor = context.actorOf(props, handler.id)
-      handler.actor = actor
-      context.watch(actor)
-      _handlers += Handler(predicate, actor)
-    }
+    case m @ (_: ScapuletHandlerRequest) ⇒ query(_handlers, m)
+    case h: Handler ⇒ addHandler(h)
+    case Register(handler) ⇒ registerHandler(handler)
     case Component ⇒ sender ! component
     case Unregister(handler) ⇒ {
-      context stop context.actorFor(handler.id)
+      context stop context.actorFor(handler.handlerId)
     }
   }
+  
+  private def query[Response](handlers: Seq[Handler], msg: ScapuletHandlerMessage) {
+    val replyTo = sender
+    val futures = handlers map (h ⇒ (h.handler ? msg).mapTo[Seq[Feature]])
+    Future.reduce(futures)((_: Seq[Response]) ++ _) onSuccess {
+      case results ⇒ replyTo ! results
+    }
+  }
+  
+  private def addHandler(handler: Handler) = {
+    context.watch(h.handler)
+    _handlers += h    
+  }
+  
+  private def registerHandler(scapuletHandler: ScapuletHandler) = {
+    val predicate = Stanza.matching(
+      scapuletHandler.handlerId + "-predicate", 
+      { case x ⇒ scapuletHandler.handleStanza.isDefinedAt(x) })
+    val props = Props(new ScapuletHandler.ScapuletHandlerHost(handler))
+    val actor = context.actorOf(props, scapuletHandler.handlerId)
+    scapuletHandler.actor = actor
+    val recv = scapuletHandler.handleMeta(null)
+    val handlesQuery = (m: Any) => recv.isDefinedAt(m)
+    val handler = Handler(predicate, handlesQuery, actor)
+    addHandler(handler)
+  }
+  
+  private def nonServiceDiscoveryHandlers = _handlers filter {_.handler.path.name != "service-discovery" }
+  
 }
 
