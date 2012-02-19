@@ -24,7 +24,7 @@ class ServiceDiscoverySpec extends AkkaSpecification(ServiceDiscoverySpec.conf) 
     "When providing service discovery the component should" ^
       "reply to a top level info query" ^
         "with a info response" ! specify.repliesToInfoRequest ^
-        "with error if not a component request" ! pending ^ //specify.repliesWithErrorForInvalid ^
+        "with error if not a component request" ! specify.repliesWithErrorForInvalid ^
     end
   
   def specify = new ServiceDiscoveryContext
@@ -49,6 +49,10 @@ class ServiceDiscoverySpec extends AkkaSpecification(ServiceDiscoverySpec.conf) 
     probe.expectMsg(Scapulet.Connect)
     val hand = new DummyHandler2
     conn ! Register(hand)
+    probe.ignoreMsg({
+      case _: NodeSeq => false
+      case _ => true
+    })
 
     def after = {
       system stop conn
@@ -56,18 +60,23 @@ class ServiceDiscoverySpec extends AkkaSpecification(ServiceDiscoverySpec.conf) 
     }
     
     def repliesToInfoRequest = this {
-      probe.ignoreMsg({
-        case _: NodeSeq => false
-        case _ => true
-      })
       conn ! IncomingStanza(DiscoInfoQuery("bla134", "tom@capulet.com/blah", connConfig.connection.address))
       val msg = probe.receiveOne(2 seconds).asInstanceOf[NodeSeq]
       msg \\ "identity" must haveTheSameElementsAs(hand.identities.map(_.toXml)) and {
         msg \\ "feature" must haveTheSameElementsAs((Seq(Feature.discoInfo, Feature.discoItems) ++ hand.features).map(_.toXml))
       }
     }
+
     def repliesWithErrorForInvalid = this {
-      pending
+      conn ! IncomingStanza(DiscoInfoQuery("bla134", "tom@capulet.com/blah", "wrong@" + connConfig.connection.address))
+      val msg = probe.receiveOne(2 seconds).asInstanceOf[NodeSeq]
+      msg \\ "identity" must beEmpty and {
+        msg \\ "feature" must beEmpty 
+      } and {
+        (msg \\ "error").head must ==/(<error type="cancel">
+                  <service-unavailable xmlns={ ns.Stanza }/>
+                </error>)
+      }
     }
   }
 }
