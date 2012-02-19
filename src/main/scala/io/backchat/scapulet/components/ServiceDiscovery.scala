@@ -23,11 +23,11 @@ abstract class ServiceDiscovery(val version: String)(implicit system: ActorSyste
   val identities: Seq[Identity] = Vector.empty
 
   def handleStanza = {
-    case InfoQuery(iq) && NoInfoQueryNode() && ToComponent(`me`) && FromJid(from) ⇒ safeReplyWith(me, from) {
-      iqReply(ns.DiscoInfo, iq \ "@id" text, me, from)(collectInfos ++ extendedServiceDiscoveryNodes)
+    case InfoQuery(iq) && NoInfoQueryNode() && ToComponent(`me`) && FromJid(from) ⇒ safeReplyWith {
+      iqReply(ns.DiscoInfo)(collectInfos ++ extendedServiceDiscoveryNodes)
     }
-    case DiscoInfoQuery(id, from, to, _) ⇒ safeReplyWith(from, me) {
-      iqReply(ns.DiscoInfo, id, me, from) {
+    case InfoQuery(_) ⇒ safeReplyWith {
+      iqReply(ns.DiscoInfo) {
         <query xmlns={ ns.DiscoInfo }/>
         <error type='cancel'>
           <service-unavailable xmlns={ ns.Stanza }/>
@@ -39,6 +39,8 @@ abstract class ServiceDiscovery(val version: String)(implicit system: ActorSyste
   protected def collectInfos: NodeSeq
 
   protected def extendedServiceDiscoveryNodes = NodeSeq.Empty
+
+
 }
 
 class ComponentServiceDiscovery(version: String, protected val componentConfig: ComponentConfig)(implicit system: ActorSystem)

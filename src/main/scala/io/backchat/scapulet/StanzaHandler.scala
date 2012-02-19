@@ -33,6 +33,13 @@ object StanzaHandler {
 
     protected def receive = internalQueries orElse handler.handleMeta(sender) orElse handler.handleStanza orElse shuttingDown
 
+    protected def handleStanza: Receive = {
+      case x: NodeSeq if handler.handleStanza.isDefinedAt(x) => {
+        handler.lastStanza = x
+        handler.handleStanza(x)
+      }
+    }
+    
     protected def shuttingDown: Receive = {
       case Disconnecting ⇒ {
         sender ! NodeSeq.Empty
@@ -89,6 +96,8 @@ abstract class StanzaHandler(val handlerId: String)(implicit protected val syste
 
   def infos: NodeSeq = NodeSeq.fromSeq((identities map (_.toXml)) ++ (features map (_.toXml)))
 
+  private[scapulet] var lastStanza = NodeSeq.Empty
+
   protected def replyWith(msg: ⇒ NodeSeq) = {
     val m: NodeSeq = msg
     if (!(m forall (_.isEmpty))) {
@@ -97,14 +106,15 @@ abstract class StanzaHandler(val handlerId: String)(implicit protected val syste
     }
   }
 
-  protected def safeReplyWith(from: String, to: String, include: Option[Elem] = None)(msg: ⇒ NodeSeq) = {
+  protected def safeReplyWith(msg: => NodeSeq) = safeReplyWith(None)(msg)
+  protected def safeReplyWith(include: Option[Elem])(msg: ⇒ NodeSeq) = {
     replyWith {
       try {
         msg
       } catch {
         case e ⇒ {
           logger.error(e, "There was an error when generating the reply for [%s] from [%s]", from, to)
-          internalServerError(from, to, include)
+          internalServerError(lastStanza \ "@to" text, lastStanza \ "@from" text, include)
         }
       }
     }
