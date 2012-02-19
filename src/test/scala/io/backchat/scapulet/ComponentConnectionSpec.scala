@@ -46,7 +46,7 @@ class ComponentConnectionSpec extends AkkaSpecification {
     val handleNone = TestProbe()
 
     val connConfig =
-      ComponentConfig("test", "test for connection", ConnectionConfig(
+      ComponentConfig("component", "test", "test for connection", ConnectionConfig(
         userName = "componentid",
         password = "componentpassword",
         host = "127.0.0.1",
@@ -96,7 +96,7 @@ class ComponentConnectionSpec extends AkkaSpecification {
     server.connect()
     
 
-    val conn = system.actorOf(Props(new ComponentConnection(Some(connConfig))), "component")
+    val conn = system.actorOf(Props(new ComponentConnection(Some(connConfig))), connConfig.id)
     conn ! Scapulet.Connect
     conn ! Handler(Stanza.matching.AllStanzas, _ => false, allStanzas.ref)
     conn ! Handler(Stanza.matching("none", { case _ => false }), _ => false, handleNone.ref)

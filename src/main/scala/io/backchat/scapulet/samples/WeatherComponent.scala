@@ -5,6 +5,7 @@ import io.backchat.scapulet.{ ConnectionConfig, ComponentConfig }
 object WeatherComponent {
 
   val config = ComponentConfig(
+    id = "weather",
     name = "Weather Demo Component",
     description = "A Demo for implementing an external XMPP component",
     connection = ConnectionConfig("weatherdemo", "weatherdemo", "127.0.0.1", 39473, Some("localhost")))

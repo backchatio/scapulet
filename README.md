@@ -55,13 +55,13 @@ So far you've only got a connection, you still need to make the component respon
 have to register handlers. To register a handler we need a predicate and an actor to actually handle the stanzas.
 
 ```scala
-echoComponent.register(new ScapuletHandler("all-stanzas") {
+echoComponent.register(new ScapuletHandler("weather") {
 
-  val features = Seq.empty[Feature]
+  val features = Seq(Feature.notification.weather")
   val identities = Seq.empty[Identity]
 
   def handleStanza = {
-    case stanza => replyWith(stanza)
+    case InfoQuery(stanza) && ToJid(to @ `echoComponent.address`) && FromJid(from) => replyWith(to, from, stanza)
   }
 })
 ```

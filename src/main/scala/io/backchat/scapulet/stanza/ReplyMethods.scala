@@ -37,7 +37,7 @@ trait ReplyMethods {
    *
    * @return a NodeSeq representing the presence stanza
    */
-  protected def presence(from: String, to: String, presType: Option[String])(children: Seq[Node]) = {
+  protected def presence(from: String, to: String, presType: Option[String] = None)(children: Seq[Node]) = {
     val ele = <presence from={ from } to={ to }>
                 { children }
               </presence>

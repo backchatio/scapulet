@@ -10,10 +10,11 @@ import com.typesafe.config.Config
 import java.util.concurrent.TimeUnit
 
 object ComponentConfig {
-  def apply(config: Config): ComponentConfig =
-    new ComponentConfig(config.getString("name"), config.getString("description"), ConnectionConfig(config))
+  def apply(id: String, config: Config): ComponentConfig =
+    new ComponentConfig(id, config.getString("name"), config.getString("description"), ConnectionConfig(config))
 }
 case class ComponentConfig(
+  id: String,
   name: String,
   description: String,
   connection: ConnectionConfig,
@@ -22,7 +23,8 @@ case class ComponentConfig(
 object ConnectionConfig {
 
   def apply(config: Config): ConnectionConfig = apply(config, None)
-  def apply(config: Config, callback: Option[ActorRef]): ConnectionConfig = {
+  def apply(config: Config, callback: Option[ActorRef]): ConnectionConfig = apply(config, callback, None)
+  def apply(config: Config, callback: Option[ActorRef], connectionOverride: Option[ActorRef]): ConnectionConfig = {
     ConnectionConfig(
       config.getString("userName"),
       config.getString("password"),
@@ -31,7 +33,8 @@ object ConnectionConfig {
       config.getString("domain").blankOpt,
       Duration(config.getMilliseconds("connectionTimeout"), TimeUnit.MILLISECONDS),
       Duration(config.getMilliseconds("reconnectDelay"), TimeUnit.MILLISECONDS),
-      callback)
+      callback,
+      connectionOverride)
   }
 }
 case class ConnectionConfig(
@@ -42,7 +45,8 @@ case class ConnectionConfig(
     virtualHost: Option[String] = None,
     connectionTimeout: Duration = 10 seconds,
     reconnectDelay: Duration = 5 seconds,
-    connectionCallback: Option[ActorRef] = None) extends NotNull {
+    connectionCallback: Option[ActorRef] = None,
+    connectionOverride: Option[ActorRef] = None) extends NotNull {
   def domain = virtualHost getOrElse host
 
   def address = "%s.%s".format(userName, domain)

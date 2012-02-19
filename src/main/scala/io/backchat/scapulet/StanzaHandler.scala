@@ -18,7 +18,7 @@ object StanzaHandler {
     case object ComponentInfos extends ScapuletHandlerRequest
     case object ServerInfos extends ScapuletHandlerRequest
     case class Request(request: ScapuletHandlerRequest, seenBy: Seq[ActorRef] = Seq.empty) extends ScapuletHandlerMessage
-    case class Send(xml: Node) extends ScapuletHandlerMessage
+    case class Send(xml: NodeSeq) extends ScapuletHandlerMessage
     case class Register(handler: StanzaHandler) extends ScapuletHandlerMessage
     case class Unregister(handler: StanzaHandler) extends ScapuletHandlerMessage
   }
@@ -44,17 +44,18 @@ object StanzaHandler {
 
     protected[scapulet] def internalQueries: Receive = {
       case Request(m, seenBy) if respondsTo(m) ⇒ sender ! serviceDiscoveryQueries(m)
-      case Send(response)                      ⇒ context.parent ! response
+      case Send(response) ⇒ {
+        context.parent ! response
+      }
     }
 
     private def respondsTo(m: ScapuletHandlerRequest) =
       handler.serviceDiscoveryAware && serviceDiscoveryQueries.isDefinedAt(m)
 
     private val serviceDiscoveryQueries: PartialFunction[Any, Any] = {
-      case Features       ⇒ handler.features
-      case Identities     ⇒ handler.identities
-      case ComponentInfos ⇒ handler.componentInfos
-      case Infos          ⇒ handler.infos
+      case Features   ⇒ handler.features
+      case Identities ⇒ handler.identities
+      case Infos      ⇒ handler.infos
       case ServerInfos ⇒ handler match {
         case h: ServerStanzaHandler ⇒ h.serverInfos
         case _                      ⇒ NodeSeq.Empty
@@ -65,30 +66,38 @@ object StanzaHandler {
   }
 }
 
-trait ServerStanzaHandler { self: StanzaHandler ⇒
+trait ServerInfos { self: StanzaHandler ⇒
 
   def serverInfos: NodeSeq = features map (_.toXml)
+  def componentInfos: NodeSeq
+}
+
+trait ComponentHandler { self: StanzaHandler ⇒
+  protected def componentConfig: ComponentConfig
+  protected def component = system.scapulet.component(componentConfig.id)
+  protected val me = componentConfig.connection.address
+
 }
 
 abstract class StanzaHandler(val handlerId: String)(implicit protected val system: ActorSystem) extends ErrorReply with ReplyMethods with Logging {
 
   import StanzaHandler.Messages._
   private[scapulet] implicit var actor: ActorRef = _
+
   def features: Seq[Feature]
   def identities: Seq[Identity]
 
-  def componentInfos: NodeSeq = NodeSeq.fromSeq((identities map (_.toXml)) ++ (features map (_.toXml)))
-  def infos: NodeSeq = NodeSeq.Empty
+  def infos: NodeSeq = NodeSeq.fromSeq((identities map (_.toXml)) ++ (features map (_.toXml)))
 
-  protected def replyWith(msg: ⇒ Node) = {
-    val m: Node = msg
-    if (!m.isEmpty) {
-      logger debug "Replying with:\n%s".format(m.map(_.toString).mkString("\n"))
+  protected def replyWith(msg: ⇒ NodeSeq) = {
+    val m: NodeSeq = msg
+    if (!(m forall (_.isEmpty))) {
+      logger debug "Replying through %s with:\n%s".format(actor, m)
       actor ! Send(m)
     }
   }
 
-  protected def safeReplyWith(from: String, to: String, include: Option[Elem] = None)(msg: ⇒ Node) = {
+  protected def safeReplyWith(from: String, to: String, include: Option[Elem] = None)(msg: ⇒ NodeSeq) = {
     replyWith {
       try {
         msg
@@ -106,6 +115,11 @@ abstract class StanzaHandler(val handlerId: String)(implicit protected val syste
   def handleMeta(sender: ⇒ ActorRef): Receive = { case "alwaysfail" ⇒ throw new UnsupportedOperationException("Received an impossible message of 'alwaysfail'") }
 
   def serviceDiscoveryAware = true
+
+  protected val me: String
+}
+
+abstract class ServerStanzaHandler(handlerId: String)(implicit system: ActorSystem) extends StanzaHandler(handlerId) with ServerInfos {
 
 }
 

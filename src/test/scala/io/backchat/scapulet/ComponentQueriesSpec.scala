@@ -18,11 +18,16 @@ object ComponentQueriesSpec {
     def handleStanza = {
       case _ => 
     }
+
+    protected val me = ""
   }
   class DummyHandler2(implicit system: ActorSystem) extends StanzaHandler("queries-test-2") {
     def features: Seq[Feature] = Vector(Feature.xmppPing, Feature.xmppReceipts)
 
     def identities: Seq[Identity] = Vector(Identity.collaboration.whiteboard)
+
+
+    protected val me = ""
 
     def handleStanza = {
       case _ =>
@@ -46,13 +51,13 @@ class ComponentQueriesSpec extends AkkaSpecification { def is = sequential ^
     implicit val timeout = Timeout(2 seconds)
     
     val connConfig =
-          ComponentConfig("test", "test for connection", ConnectionConfig(
+          ComponentConfig("component", "test", "test for connection", ConnectionConfig(
             userName = "componentid",
             password = "componentpassword",
             host = "127.0.0.1",
             port = FreePort(),
             virtualHost = Some("localhost")))
-    val conn = system.actorOf(Props(new ComponentConnection(Some(connConfig))), "component")
+    val conn = system.actorOf(Props(new ComponentConnection(Some(connConfig))), connConfig.id)
     val hand = new DummyHandler
     val hand2 = new DummyHandler2
     conn ! Register(hand)
@@ -72,7 +77,7 @@ class ComponentQueriesSpec extends AkkaSpecification { def is = sequential ^
     
     def respondsToComponentInfoQueries = this {
       val componentInfos = NodeSeq.fromSeq((hand.identities ++ hand2.identities).map(_.toXml) ++ (hand.features ++ hand2.features).map(_.toXml))
-      Await.result((conn ? ComponentInfos).mapTo[NodeSeq], 2 seconds) must ==/(componentInfos)
+      Await.result((conn ? Infos).mapTo[NodeSeq], 2 seconds) must ==/(componentInfos)
     }
   }
 

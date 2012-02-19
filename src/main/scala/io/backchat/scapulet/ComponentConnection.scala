@@ -1,5 +1,6 @@
 package io.backchat.scapulet
 
+import components.{ ComponentServiceDiscovery, ServiceDiscovery }
 import stanza.{ Identity, Feature }
 import util.control.Exception._
 import _root_.org.jboss.netty.channel._
@@ -43,6 +44,8 @@ object XmppComponent {
     def identities: Seq[Identity] = {
       ask[Seq[Identity]](Identities)
     }
+
+    def infos: NodeSeq = ask[NodeSeq](Infos)
 
     def register(handler: StanzaHandler) = {
       component ! Register(handler)
@@ -100,6 +103,13 @@ trait XmppComponent {
    * @return a sequence of [[io.backchat.scapulet.stanza.Feature]]
    */
   def identities: Seq[Identity]
+
+  /**
+   * Returns the list of service disconvery info items
+   *
+   * @return [[scala.xml.NodeSeq]]
+   */
+  def infos: NodeSeq
 
   /**
    * Register a new stanza handler with this component.
@@ -320,10 +330,11 @@ object ComponentConnection {
 }
 
 private[scapulet] class ComponentConnection(
-    overrideConfig: Option[ComponentConfig] = None) extends ScapuletConnectionActor {
+    overrideConfig: Option[ComponentConfig] = None, overrideConnection: Option[ActorRef] = None) extends ScapuletConnectionActor {
 
   import ComponentConnection._
   import StanzaHandler.Messages._
+  import context.system
 
   implicit val executor = context.system.dispatcher
   val config = overrideConfig getOrElse context.system.scapulet.settings.component(self.path.name)
@@ -334,7 +345,7 @@ private[scapulet] class ComponentConnection(
 
   private var _handlers = Set.empty[Handler]
 
-  protected def connection = context.actorFor("connection")
+  protected def connection = overrideConnection getOrElse context.actorFor("connection")
 
   protected def receive = handlerMessages orElse connectionMessages orElse lifeCycleMessages
 
@@ -345,14 +356,8 @@ private[scapulet] class ComponentConnection(
   }
 
   protected def handlerMessages: Receive = {
-    case ComponentInfos                  ⇒ nodeSeqQuery(_handlers, ComponentInfos)
-    case Request(ComponentInfos, seenBy) ⇒ nodeSeqQuery(_handlers, ComponentInfos, seenBy)
-    case Items                           ⇒ nodeSeqQuery(_handlers, Items)
-    case Request(Items, seenBy)          ⇒ nodeSeqQuery(_handlers, Items, seenBy)
     case Infos                           ⇒ nodeSeqQuery(_handlers, Infos)
     case Request(Infos, seenBy)          ⇒ nodeSeqQuery(_handlers, Infos, seenBy)
-    case ServerInfos                     ⇒ nodeSeqQuery(_handlers, ServerInfos)
-    case Request(ServerInfos, seenBy)    ⇒ nodeSeqQuery(_handlers, ServerInfos, seenBy)
     case m @ (_: ScapuletHandlerRequest) ⇒ query(_handlers, m)
     case Request(req, seenBy)            ⇒ query(_handlers, req, seenBy)
     case h: Handler                      ⇒ addHandler(h)
@@ -363,13 +368,16 @@ private[scapulet] class ComponentConnection(
   protected def connectionMessages: Receive = {
     case xml: NodeSeq ⇒ connection ! xml
     case Scapulet.Connect ⇒ {
+      println("Received Connect %s" format self)
       val c = if (connection.isTerminated) {
+        println("The connection is terminated?!?")
         val conn = context.actorOf(Props(new ComponentConnectionHandle(self.path.name, config.connection)), "connection")
         context.watch(conn)
         conn
       } else connection
 
       c ! Scapulet.Connect
+      registerHandler(new ComponentServiceDiscovery("0.1", config))
     }
     case Scapulet.Connected ⇒ {
       callback foreach { _ ! Scapulet.Connected }

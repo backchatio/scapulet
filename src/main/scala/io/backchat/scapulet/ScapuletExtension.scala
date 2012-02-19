@@ -11,7 +11,7 @@ object ScapuletExtension extends ExtensionId[ScapuletExtension] with ExtensionId
 
   class ComponentSettings(config: Config, defaultConfig: Config) {
     def get(name: String) = if (config.hasPath(name)) {
-      Some(ComponentConfig(config.withFallback(defaultConfig)))
+      Some(ComponentConfig(name, config.withFallback(defaultConfig)))
     } else None
 
     def apply(name: String) = get(name).get
@@ -61,8 +61,8 @@ object ScapuletExtension extends ExtensionId[ScapuletExtension] with ExtensionId
       Await.result((guardian ? CreateActor(Props[Supervisor], "components")).mapTo[ActorRef], timeout.duration)
     }
 
-    private[scapulet] def componentConnection(id: String, overrideConfig: Option[ComponentConfig] = None) = {
-      val props = Props(new ComponentConnection(overrideConfig)).withDispatcher("scapulet.component-connection-dispatcher")
+    private[scapulet] def componentConnection(id: String, overrideConfig: Option[ComponentConfig] = None, overrideConnection: Option[ActorRef] = None) = {
+      val props = Props(new ComponentConnection(overrideConfig, overrideConnection)).withDispatcher("scapulet.component-connection-dispatcher")
       val com = Await.result((components ? CreateActor(props, id)).mapTo[ActorRef], timeout.duration)
       com ! Scapulet.Connect
       com

@@ -11,7 +11,7 @@ object DiscoInfoQuery {
 
   val sl = <query xmlns={ DISCO_INFO_NS }/>
 
-  def apply[TNode <: NodeSeq](id: String, from: String, to: String): NodeSeq = {
+  def apply[TNode <: NodeSeq](id: String, from: String, to: String): Node = {
     require(id.nonBlank, "You need to provide an id for this disco info query")
     require(from.nonBlank, "You need to provide a sender address for this disco info query")
     require(to.nonBlank, "You need to provide a recipient address for this disco info query")

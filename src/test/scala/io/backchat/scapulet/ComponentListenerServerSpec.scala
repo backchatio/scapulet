@@ -21,8 +21,8 @@ class ComponentListenerServerSpec extends AkkaSpecification { def is =
     implicit val self = probe.ref
 
     val connConfig =
-      ComponentConfig("test", "test for connection", ConnectionConfig(
-        userName = "acomponent",
+      ComponentConfig("acomponent", "test", "test for connection", ConnectionConfig(
+        userName = "acomponentid",
         password = "componentpassword",
         host = "127.0.0.1",
         port = FreePort(),
