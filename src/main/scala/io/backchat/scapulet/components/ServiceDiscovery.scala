@@ -8,7 +8,7 @@ import stanza.{ DiscoInfoQuery, Identity, Feature }
  * The ability to discover information about entities on the Jabber network is extremely valuable. Such information
  * might include features offered or protocols supported by the entity, the entity's type or identity, and additional
  * entities that are associated with the original entity in some way (often thought of as "children" of the "parent" entity).
- * @param system
+ * @param system [[akka.actor.ActorSystem]]
  */
 class ServiceDiscovery(val version: String)(implicit system: ActorSystem) extends StanzaHandler("service-discovery") {
   val features: Seq[Feature] = Vector(Feature.discoInfo, Feature.discoItems)

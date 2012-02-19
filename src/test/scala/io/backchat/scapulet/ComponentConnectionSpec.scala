@@ -22,11 +22,6 @@ class ComponentConnectionSpec extends AkkaSpecification {
       "when connected and handling incoming stanzas" ^
         "send them to handlers" ! specify("succeed").sendsStanzasToHandlers ^
         "not send to handlers with failed predicates" ! specify("succeed").skipsFailedPredicates ^
-      "when responding to internal queries" ^
-        "collect the component infos" ! pending ^
-        "collect the identies" ! pending ^
-        "collect the features" ! pending ^
-        "collect the node infos" ! pending ^
     end
 
   def validStreamResponse = {
@@ -102,6 +97,7 @@ class ComponentConnectionSpec extends AkkaSpecification {
     
 
     val conn = system.actorOf(Props(new ComponentConnection(Some(connConfig))), "component")
+    conn ! Scapulet.Connect
     conn ! Handler(Stanza.matching.AllStanzas, _ => false, allStanzas.ref)
     conn ! Handler(Stanza.matching("none", { case _ => false }), _ => false, handleNone.ref)
     
