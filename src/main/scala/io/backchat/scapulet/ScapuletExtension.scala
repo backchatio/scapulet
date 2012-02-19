@@ -62,8 +62,10 @@ object ScapuletExtension extends ExtensionId[ScapuletExtension] with ExtensionId
     }
 
     private[scapulet] def componentConnection(id: String, overrideConfig: Option[ComponentConfig] = None) = {
-      val props = Props(new ComponentConnection(overrideConfig)).withDispatcher("component-connection-dispatcher")
-      Await.result((components ? CreateActor(props, id)).mapTo[ActorRef], timeout.duration)
+      val props = Props(new ComponentConnection(overrideConfig)).withDispatcher("scapulet.component-connection-dispatcher")
+      val com = Await.result((components ? CreateActor(props, id)).mapTo[ActorRef], timeout.duration)
+      com ! Scapulet.Connect
+      com
     }
 
     def component(id: String) = XmppComponent(id)(system)

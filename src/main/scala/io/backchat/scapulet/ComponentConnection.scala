@@ -8,7 +8,7 @@ import _root_.org.jboss.netty.buffer.{ ChannelBuffers, ChannelBuffer }
 import xml._
 import jivesoftware.openfire.nio.XMLLightweightParser
 import io.backchat.scapulet.Stanza.Predicate
-import akka.pattern.ask
+import akka.pattern._
 import akka.util.duration._
 import akka.util.{ Duration, Timeout }
 import java.util.concurrent.TimeoutException
@@ -155,8 +155,15 @@ object ComponentConnection {
 
   private[scapulet] object OpenStream {
     val openStreamFormatString = """<stream:stream xmlns="%s" xmlns:stream="%s" to="%s" >"""
+    private val streamRegex = """(<\?[^?]>)?<stream:stream[^>]*>""".r
     def apply(jid: String, nsd: String = ns.component.Accept) = openStreamFormatString.format(nsd, ns.Stream, jid)
-
+    def unapply(msg: String) = streamRegex.findFirstMatchIn(msg) match {
+      case Some(start) ⇒ {
+        val x = XML.loadString(start + "</stream:stream>")
+        Some(x \ "@from" text)
+      }
+      case _ ⇒ None
+    }
   }
 
   private[scapulet] object StreamResponse {
@@ -329,10 +336,6 @@ private[scapulet] class ComponentConnection(
 
   protected def connection = context.actorFor("connection")
 
-  override def preStart() {
-    self ! Scapulet.Connect
-  }
-
   protected def receive = handlerMessages orElse connectionMessages orElse lifeCycleMessages
 
   protected def lifeCycleMessages: Receive = {
@@ -342,12 +345,19 @@ private[scapulet] class ComponentConnection(
   }
 
   protected def handlerMessages: Receive = {
+    case ComponentInfos                  ⇒ nodeSeqQuery(_handlers, ComponentInfos)
+    case Request(ComponentInfos, seenBy) ⇒ nodeSeqQuery(_handlers, ComponentInfos, seenBy)
+    case Items                           ⇒ nodeSeqQuery(_handlers, Items)
+    case Request(Items, seenBy)          ⇒ nodeSeqQuery(_handlers, Items, seenBy)
+    case Infos                           ⇒ nodeSeqQuery(_handlers, Infos)
+    case Request(Infos, seenBy)          ⇒ nodeSeqQuery(_handlers, Infos, seenBy)
+    case ServerInfos                     ⇒ nodeSeqQuery(_handlers, ServerInfos)
+    case Request(ServerInfos, seenBy)    ⇒ nodeSeqQuery(_handlers, ServerInfos, seenBy)
     case m @ (_: ScapuletHandlerRequest) ⇒ query(_handlers, m)
+    case Request(req, seenBy)            ⇒ query(_handlers, req, seenBy)
     case h: Handler                      ⇒ addHandler(h)
     case Register(handler)               ⇒ registerHandler(handler)
-    case Unregister(handler) ⇒ {
-      context stop context.actorFor(handler.handlerId)
-    }
+    case Unregister(handler)             ⇒ context stop context.actorFor(handler.handlerId)
   }
 
   protected def connectionMessages: Receive = {
@@ -373,12 +383,15 @@ private[scapulet] class ComponentConnection(
 
   private def macthingHandlers(stanza: Node) = _handlers filter (_.predicate(stanza)) map (_.handler)
 
-  private def query[Response](handlers: Set[Handler], msg: ScapuletHandlerMessage)(implicit mf: Manifest[Response]) {
-    val replyTo = sender
-    val futures = handlers map (h ⇒ (h.handler ? msg).mapTo[Seq[Response]])
-    Future.reduce(futures)((_: Seq[Response]) ++ _) onSuccess {
-      case results ⇒ replyTo ! results
-    }
+  private def nodeSeqQuery(handlers: Set[Handler], msg: ScapuletHandlerRequest, seenBy: Seq[ActorRef] = Seq.empty) {
+    doQuery[NodeSeq](handlers, msg, seenBy) map (_ reduce (_ ++ _)) pipeTo sender
+  }
+  private def query[Response](handlers: Set[Handler], msg: ScapuletHandlerRequest, seenBy: Seq[ActorRef] = Seq.empty)(implicit mf: Manifest[Response]) {
+    doQuery(handlers, msg, seenBy) pipeTo sender
+  }
+  private def doQuery[Response](handlers: Set[Handler], msg: ScapuletHandlerRequest, seenBy: Seq[ActorRef] = Seq.empty)(implicit mf: Manifest[Response]): Future[Seq[Response]] = {
+    val futures = handlers map (_.handler) filterNot seenBy.contains map { h ⇒ (h ? Request(msg, seenBy)).mapTo[Seq[Response]] }
+    Future.reduce(futures)((_: Seq[Response]) ++ _)
   }
 
   private def addHandler(handler: Handler) = {
@@ -390,7 +403,7 @@ private[scapulet] class ComponentConnection(
     val predicate = Stanza.matching(
       scapuletHandler.handlerId + "-predicate",
       { case x ⇒ scapuletHandler.handleStanza.isDefinedAt(x) })
-    val props = Props(new StanzaHandler.ScapuletHandlerHost(scapuletHandler)).withDispatcher("component-connection-dispatcher")
+    val props = Props(new StanzaHandler.ScapuletHandlerHost(scapuletHandler)).withDispatcher("scapulet.component-connection-dispatcher")
     val actor = context.actorOf(props, scapuletHandler.handlerId)
     scapuletHandler.actor = actor
     val recv = scapuletHandler.handleMeta(null)

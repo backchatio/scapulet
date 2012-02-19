@@ -477,7 +477,7 @@ object Identity {
 
     /**
      * A directory of waiting list entries
-     * 
+     *
      * {{{
      * <identity category='directory' type='waitinglist'/>
      * }}}
@@ -489,7 +489,7 @@ object Identity {
    * The "gateway" category consists of translators between Jabber/XMPP services and non-XMPP services.
    */
   object gateway {
-    
+
     /**
      * Gateway to AOL Instant Messenger
      *
@@ -747,7 +747,7 @@ object Identity {
      * SOCKS5 bytestreams proxy service
      *
      * {{{
-     * <identity category='proxy' type='bytestreams'/> 
+     * <identity category='proxy' type='bytestreams'/>
      * }}}
      */
     object bytestreams extends Identity("proxy", "bytestreams")

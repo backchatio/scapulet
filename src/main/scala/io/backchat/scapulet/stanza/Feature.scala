@@ -32,7 +32,7 @@ class Feature(val name: String) extends Product1[String] {
 /**
  * Contains the extractor and factory method for features.
  * Also contains predefined feature objects
- * 
+ *
  * @see [[io.backchat.scapulet.stanza.Feature]]
  */
 object Feature {
@@ -75,7 +75,6 @@ object Feature {
    * Support for [[http://www.xmpp.org/extensions/xep-0199.html XEP-0199: XMPP Ping]]
    */
   object xmppPing extends Feature(ns.XmppPing)
-
 
   /**
    * Support for [[http://www.xmpp.org/extensions/xep-0199.html XEP-0199: XMPP Ping]]

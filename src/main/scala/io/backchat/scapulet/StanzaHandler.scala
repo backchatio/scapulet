@@ -10,13 +10,14 @@ object StanzaHandler {
 
   object Messages {
     sealed trait ScapuletHandlerMessage
-    sealed trait ScapuletHandlerRequest extends ScapuletHandlerMessage
+    sealed trait ScapuletHandlerRequest
     case object Features extends ScapuletHandlerRequest
     case object Identities extends ScapuletHandlerRequest
     case object Infos extends ScapuletHandlerRequest
     case object Items extends ScapuletHandlerRequest
     case object ComponentInfos extends ScapuletHandlerRequest
     case object ServerInfos extends ScapuletHandlerRequest
+    case class Request(request: ScapuletHandlerRequest, seenBy: Seq[ActorRef] = Seq.empty) extends ScapuletHandlerMessage
     case class Send(xml: Node) extends ScapuletHandlerMessage
     case class Register(handler: StanzaHandler) extends ScapuletHandlerMessage
     case class Unregister(handler: StanzaHandler) extends ScapuletHandlerMessage
@@ -24,6 +25,12 @@ object StanzaHandler {
 
   private[scapulet] class ScapuletHandlerHost(handler: StanzaHandler) extends ScapuletConnectionActor {
     import Messages._
+
+    override def preStart() {
+      super.preStart()
+      logger info ("Loading handler %s" format handler.handlerId)
+    }
+
     protected def receive = internalQueries orElse handler.handleMeta(sender) orElse handler.handleStanza orElse shuttingDown
 
     protected def shuttingDown: Receive = {
@@ -36,20 +43,31 @@ object StanzaHandler {
     }
 
     protected[scapulet] def internalQueries: Receive = {
-      case m if handler.serviceDiscoveryAware && serviceDiscoveryQueries.isDefinedAt(m) ⇒ sender ! m
-      case Send(response) ⇒ context.parent ! response
+      case Request(m, seenBy) if respondsTo(m) ⇒ sender ! serviceDiscoveryQueries(m)
+      case Send(response)                      ⇒ context.parent ! response
     }
 
-    private val serviceDiscoveryQueries: Receive = {
-      case Features       ⇒ sender ! handler.features
-      case Identities     ⇒ sender ! handler.identities
-      case ComponentInfos ⇒ sender ! handler.componentInfos
-      case Infos          ⇒ sender ! handler.infos
-      case ServerInfos    ⇒ sender ! handler.serverInfos
-      case Items          ⇒ sender ! handler.items
+    private def respondsTo(m: ScapuletHandlerRequest) =
+      handler.serviceDiscoveryAware && serviceDiscoveryQueries.isDefinedAt(m)
+
+    private val serviceDiscoveryQueries: PartialFunction[Any, Any] = {
+      case Features       ⇒ handler.features
+      case Identities     ⇒ handler.identities
+      case ComponentInfos ⇒ handler.componentInfos
+      case Infos          ⇒ handler.infos
+      case ServerInfos ⇒ handler match {
+        case h: ServerStanzaHandler ⇒ h.serverInfos
+        case _                      ⇒ NodeSeq.Empty
+      }
+      //      case Items ⇒ sender ! handler.items
     }
 
   }
+}
+
+trait ServerStanzaHandler { self: StanzaHandler ⇒
+
+  def serverInfos: NodeSeq = features map (_.toXml)
 }
 
 abstract class StanzaHandler(val handlerId: String)(implicit protected val system: ActorSystem) extends ErrorReply with ReplyMethods with Logging {
@@ -59,10 +77,8 @@ abstract class StanzaHandler(val handlerId: String)(implicit protected val syste
   def features: Seq[Feature]
   def identities: Seq[Identity]
 
-  def componentInfos: NodeSeq = (features map (_.toXml)) ++ (identities map (_.toXml))
-  def items: NodeSeq = NodeSeq.Empty
+  def componentInfos: NodeSeq = NodeSeq.fromSeq((identities map (_.toXml)) ++ (features map (_.toXml)))
   def infos: NodeSeq = NodeSeq.Empty
-  def serverInfos: NodeSeq = NodeSeq.Empty
 
   protected def replyWith(msg: ⇒ Node) = {
     val m: Node = msg
@@ -90,5 +106,6 @@ abstract class StanzaHandler(val handlerId: String)(implicit protected val syste
   def handleMeta(sender: ⇒ ActorRef): Receive = { case "alwaysfail" ⇒ throw new UnsupportedOperationException("Received an impossible message of 'alwaysfail'") }
 
   def serviceDiscoveryAware = true
+
 }
 
