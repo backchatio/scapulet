@@ -24,6 +24,7 @@ package object scapulet {
     val Ping = "ping"
     val PingExtensions = "http://www.xmpp.org/extensions/xep-0199.html#ns"
     val XmppPing = "urn:xmpp:ping"
+    val XmppReceipts = "urn:xmpp:receipts"
     val Tls = "urn:ietf:params:xml:ns:xmpp-tls"
     val Sasl = "urn:ietf:params:xml:ns:xmpp-sasl"
     val XmppStream = "urn:ietf:params:xml:ns:xmpp-streams"

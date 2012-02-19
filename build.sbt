@@ -1,3 +1,4 @@
+import java.io.ByteArrayOutputStream
 import scala.xml._
 import scalariform.formatter.preferences._
 
@@ -118,3 +119,33 @@ testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "console", "junitxm
 testOptions in Test <+= (crossTarget map { ct =>
  Tests.Setup { () => System.setProperty("specs2.junit.outDir", new File(ct, "specs-reports").getAbsolutePath) }
 })
+//
+//sourceGenerators in Compile <+= (sourceManaged in Compile, streams) map { (out, s) =>
+//  val exceptionMap = Map(
+//    "" ->
+//  )
+//  val vars = XML.load("http://xmpp.org/registrar/disco-features.xml") \\ "var"
+//  val featureList = vars map { v =>
+//"""
+//  /**
+//   * %s
+//   */
+//   object %s
+//"""
+//  }
+//
+//  val file = out / "io" / "backchat" / "xmpp" / "features.scala"
+//
+//  val container = """
+//package io.backchat.xmpp.stanza
+//
+///**
+// * The ''var'' attribute of the <feature/> element within the ''http://jabber.org/protocol/disco#info'' namespace may
+// * contain any namespace that is registered with [[http://www.xmpp.org/registrar/namespaces.html the XMPP Registrar]] as well as some additional values
+// * that have been separately registered with the Registrar.
+// */
+//object features {
+//%s
+//}
+//""".format(featureList)
+//}

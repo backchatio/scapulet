@@ -48,14 +48,14 @@ val weather = system.scapulet.component("weather")
 You can then write to the component by sending it xml snippets
 
 ```scala
-system.actorFor("/user/xmpp/components/weather") ! <presence to="julliet@capulet.com" from="echo.montague.net"></presence>
+weather ! <presence to="julliet@capulet.com" from="weather.jabber.local"></presence>
 ```
 
 So far you've only got a connection, you still need to make the component respond to actual xmpp stanzas. For this we
 have to register handlers. To register a handler we need a predicate and an actor to actually handle the stanzas.
 
 ```scala
-echoComponent.register(new ScapuletHandler("allStanzas") {
+echoComponent.register(new ScapuletHandler("all-stanzas") {
 
   val features = Seq.empty[Feature]
   val identities = Seq.empty[Identity]

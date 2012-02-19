@@ -5,8 +5,8 @@ import akka.actor.ActorSystem
 import stanza.{ DiscoInfoQuery, Identity, Feature }
 
 class ServiceDiscovery(implicit system: ActorSystem) extends StanzaHandler("service-discovery") {
-  val features: Seq[Feature] = Vector(Feature(ns.DiscoInfo), Feature(ns.DiscoItems))
-  val identities: Seq[Identity] = Vector.empty[Identity]
+  val features: Seq[Feature] = Vector(Feature.discoInfo, Feature.discoItems)
+  val identities: Seq[Identity] = Vector.empty
 
   def handleStanza = {
     case DiscoInfoQuery(from, to, id, None) if !to.contains("@") ⇒ safeReplyWith(from, to) {

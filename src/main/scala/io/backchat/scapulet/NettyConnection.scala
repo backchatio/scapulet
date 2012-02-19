@@ -6,7 +6,7 @@ import org.jboss.netty.channel._
 import java.util.concurrent.atomic.AtomicInteger
 import org.jboss.netty.bootstrap.{ ServerBootstrap, ClientBootstrap, Bootstrap }
 import java.util.concurrent.{ TimeUnit, ThreadFactory, Executors }
-import akka.actor.{ ActorSystem, ActorContext, ActorRef }
+import akka.actor.{ ActorSystem, ActorRef }
 import socket.nio.{ NioServerSocketChannelFactory, NioClientSocketChannelFactory }
 
 object NettyConnection {
