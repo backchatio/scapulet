@@ -40,7 +40,6 @@ abstract class ServiceDiscovery(val version: String)(implicit system: ActorSyste
 
   protected def extendedServiceDiscoveryNodes = NodeSeq.Empty
 
-
 }
 
 class ComponentServiceDiscovery(version: String, protected val componentConfig: ComponentConfig)(implicit system: ActorSystem)
