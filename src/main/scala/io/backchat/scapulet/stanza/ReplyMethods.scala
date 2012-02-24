@@ -17,7 +17,7 @@ trait ReplyMethods {
    * @return a NodeSeq representing the stanza
    */
   protected def iqReply[TNode <: NodeSeq](ns: String)(content: ⇒ NodeSeq) = {
-    <iq type="result" id={ (lastStanza \ "@id").text } to={ (lastStanza \ "from").text } from={ (lastStanza \ "to").text }>
+    <iq type="result" id={ (lastStanza \ "@id").text } to={ (lastStanza \ "@from").text } from={ (lastStanza \ "@to").text }>
       <query xmlns={ ns }>
         { content }
       </query>
@@ -33,7 +33,7 @@ trait ReplyMethods {
    * @return a NodeSeq representing the presence stanza
    */
   protected def presence(presType: Option[String] = None)(children: Seq[Node]) = {
-    val ele = <presence to={ (lastStanza \ "from").text } from={ (lastStanza \ "to").text }>
+    val ele = <presence to={ (lastStanza \ "@from").text } from={ (lastStanza \ "@to").text }>
                 { children }
               </presence>
     if (presType.isDefined) {

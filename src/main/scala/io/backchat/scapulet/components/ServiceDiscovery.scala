@@ -4,7 +4,7 @@ package components
 import akka.actor.ActorSystem
 import extractors._
 import xml.NodeSeq
-import stanza.{ DiscoInfoQuery, Identity, Feature }
+import stanza.{ Identity, Feature }
 
 /**
  * The ability to discover information about entities on the Jabber network is extremely valuable. Such information
@@ -26,14 +26,7 @@ abstract class ServiceDiscovery(val version: String)(implicit system: ActorSyste
     case InfoQuery(iq) && NoInfoQueryNode() && ToComponent(`me`) && FromJid(from) ⇒ safeReplyWith {
       iqReply(ns.DiscoInfo)(collectInfos ++ extendedServiceDiscoveryNodes)
     }
-    case InfoQuery(_) ⇒ safeReplyWith {
-      iqReply(ns.DiscoInfo) {
-        <query xmlns={ ns.DiscoInfo }/>
-        <error type='cancel'>
-          <service-unavailable xmlns={ ns.Stanza }/>
-        </error>
-      }
-    }
+    case InfoQuery(_) ⇒ safeReplyWith { serviceUnavailable() }
   }
 
   protected def collectInfos: NodeSeq
