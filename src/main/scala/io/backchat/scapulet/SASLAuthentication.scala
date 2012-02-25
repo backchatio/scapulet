@@ -53,7 +53,7 @@ object SASLAuthentication {
 
     def unapply(node: Node) = node match {
       case s @ <success>{ _* }</success> ⇒ Some(s.text)
-      case _                             ⇒ None
+      case _ ⇒ None
     }
   }
 
@@ -64,7 +64,7 @@ object SASLAuthentication {
 
     def unapply(node: Node) = node match {
       case s @ <challenge>{ _* }</challenge> ⇒ Some(s.text)
-      case _                                 ⇒ None
+      case _ ⇒ None
     }
   }
 
@@ -148,7 +148,7 @@ object SASLAuthentication {
           cb.setText(_hostName)
         }
         case cb: RealmChoiceCallback ⇒ {}
-        case cb: Callback            ⇒ throw new UnsupportedCallbackException(cb)
+        case cb: Callback ⇒ throw new UnsupportedCallbackException(cb)
       }
     }
 
