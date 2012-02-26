@@ -1,0 +1,9 @@
+{
+	"folders":
+	[
+		{
+			"path": "/Users/ivan/projects/scapulet",
+      "folder_exclude_patterns": [".idea", "..sxr", ".idea_modules", ".settings", "target/streams", "target/specs2*"]
+		}
+	]
+}

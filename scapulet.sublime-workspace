@@ -1,0 +1,664 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"server",
+				"server_dir"
+			],
+			[
+				"backchat",
+				"backchatio_marketing"
+			],
+			[
+				"backch",
+				"backchatio_marketing"
+			],
+			[
+				"Sca",
+				"ScapuletConnectionActor"
+			],
+			[
+				"Conn",
+				"ConnectionConfig"
+			],
+			[
+				"moj",
+				"mojolly-env"
+			],
+			[
+				"Mes",
+				"MessageSourceKind"
+			],
+			[
+				"app",
+				"appEnv"
+			],
+			[
+				"pro",
+				"protobuf"
+			],
+			[
+				"zero",
+				"zeroMQ"
+			],
+			[
+				"ass",
+				"assigned_to"
+			],
+			[
+				"con",
+				"conf_path"
+			],
+			[
+				"hubC",
+				"hubConfirmed"
+			],
+			[
+				"HEALTH",
+				"HEALTHCHECK"
+			],
+			[
+				"So",
+				"SonatypeReleaseRepo"
+			],
+			[
+				"key",
+				"keyword"
+			],
+			[
+				"ana",
+				"analyzer"
+			],
+			[
+				"embedCode",
+				"embedCode"
+			],
+			[
+				"em",
+				"embedCode"
+			],
+			[
+				"ob",
+				"objectType"
+			],
+			[
+				"matc",
+				"match_pattern"
+			],
+			[
+				"re",
+				"regex"
+			],
+			[
+				"ma",
+				"match_pattern"
+			],
+			[
+				"sta",
+				"standard_html_strip"
+			],
+			[
+				"com",
+				"compile"
+			]
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "Packages/User/xsbt.sublime-build",
+	"command_palette":
+	{
+		"height": 267.0,
+		"selected_items":
+		[
+			[
+				"Package Control: ",
+				"Package Control: List Packages"
+			],
+			[
+				"Ct",
+				"CTags: Rebuild Tags"
+			],
+			[
+				"erb",
+				"Set Syntax: Ruby on Rails"
+			],
+			[
+				"ruby",
+				"Set Syntax: Ruby"
+			],
+			[
+				"ru",
+				"Set Syntax: Ruby Haml"
+			],
+			[
+				"scala",
+				"Set Syntax: Scala"
+			],
+			[
+				"",
+				"CTags: Rebuild Tags"
+			],
+			[
+				"scal",
+				"Set Syntax: Scala"
+			],
+			[
+				"erl",
+				"Set Syntax: Erlang"
+			],
+			[
+				"rub",
+				"Set Syntax: Ruby"
+			],
+			[
+				"shel",
+				"Set Syntax: Shell Script (Bash)"
+			]
+		],
+		"width": 449.0
+	},
+	"console":
+	{
+		"height": 191.0
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": true,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/Users/ivan/projects/scapulet/src/main/scala/io/backchat/scapulet/Logging.scala",
+		"/Users/ivan/projects/scapulet/src/main/scala/io/backchat/scapulet/ComponentConnection.scala",
+		"/Users/ivan/projects/scapulet/scapulet.sublime-project",
+		"/Users/ivan/projects/scapulet/src/main/scala/io/backchat/scapulet/SASLAuthentication.scala",
+		"/Users/ivan/Library/Application Support/Sublime Text 2/Packages/Ensime/Ensime.sublime-settings",
+		"/Users/ivan/Library/Application Support/Sublime Text 2/Packages/Ensime/ensime_server.py",
+		"/Users/ivan/Library/Application Support/Sublime Text 2/Packages/Ensime/ensime_notes.py",
+		"/Users/ivan/projects/backchat/backchatio-marketing/config/vanity.yml",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/backchatio_marketing/attributes/default.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/backchat/attributes/default.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/backchat/metadata.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/backchatio_marketing/metadata.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/rbenv/metadata.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/backchat/templates/default/upstart.conf.erb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/elasticsearch/attributes/default.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/graphite/recipes/web.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/elasticsearch/recipes/default.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/elasticsearch/metadata.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/roles/elasticsearch.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/graphite/templates/default/graphite.nginx.conf.erb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/elasticsearch/recipes/nginx_proxy.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/elasticsearch/templates/default/elasticsearch.nginx.conf.erb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/backchat/templates/default/elasticsearch.yml.erb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/backchat/definitions/instance.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/redis/metadata.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/data_bags/users/ivan.json",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/graphite/templates/default/htpasswd.users.erb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/elasticsearch/templates/default/htpasswd.users.erb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/graphite/attributes/graphite.rb",
+		"/usr/local/Library/Formula/elasticsearch.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/haproxy/templates/default/haproxy-default.erb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/backchat/templates/default/shared.conf.erb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/haproxy/templates/default/haproxy.cfg.erb",
+		"/var/folders/83/6xzx4yws6qjgy9wyzpgt7rrw0000gp/T/knife-edit-783702814711247344630.js",
+		"/var/folders/83/6xzx4yws6qjgy9wyzpgt7rrw0000gp/T/knife-edit-733055662718127614123.js",
+		"/var/folders/83/6xzx4yws6qjgy9wyzpgt7rrw0000gp/T/knife-edit-033753858203035420534.js",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/backchatio_certificates/recipes/default.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/mongodb/recipes/report_to_graphite.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/elasticsearch/templates/default/graphite.rb.erb",
+		"/var/folders/83/6xzx4yws6qjgy9wyzpgt7rrw0000gp/T/knife-edit-884396031080082.js",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/backchatio_certificates/recipes/api.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/backchat/templates/default/application.conf.erb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/haproxy/recipes/default.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/haproxy/templates/default/stud.upstart.erb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/graphite/recipes/carbon.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/environments/rs_prod.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/roles/mongodb_cluster.rb",
+		"/var/folders/83/6xzx4yws6qjgy9wyzpgt7rrw0000gp/T/knife-edit-361571552766348.js",
+		"/var/folders/83/6xzx4yws6qjgy9wyzpgt7rrw0000gp/T/knife-edit-434676156914528.js",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/backchatio_certificates/files/default/wildcard.backchat.io.pem",
+		"/Users/ivan/Dropbox/Mojolly/certificates/2012/wildcard.backchat.io.crt",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/java/metadata.rb",
+		"/var/folders/83/6xzx4yws6qjgy9wyzpgt7rrw0000gp/T/knife-edit-045383537397341.js",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/backchat/recipes/app.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/roles/mojolly_base.rb",
+		"/Users/ivan/projects/gitolite-admin/keydir/casualjim.pub",
+		"/Users/ivan/projects/backchat/akka-2.g8/src/main/g8/default.properties",
+		"/Users/ivan/projects/backchat/akka-2.g8/src/main/g8/project/plugins.sbt",
+		"/Users/ivan/projects/backchat/akka-2.g8/src/main/g8/build.sbt",
+		"/Users/ivan/projects/backchat/akka-2.g8/src/main/g8/src/test/scala/$package$/tests/DurationlessSpecification.scala",
+		"/Users/ivan/projects/backchat/akka-2.g8/src/main/g8/src/main/scala/$package$/Boot.scala",
+		"/Users/ivan/projects/backchat/akka-2.g8/src/main/g8/src/main/resources/reference.conf",
+		"/Users/ivan/projects/backchat/akka-2.g8/src/main/g8/src/test/resources/application.conf",
+		"/Users/ivan/projects/backchat/akka-2.g8/src/main/g8/src/test/scala/$package$/tests/AkkaSpecification.scala",
+		"/Users/ivan/projects/backchat/akka-2.g8/src/main/g8/src/main/scala/$package$/Boot",
+		"/Users/ivan/projects/backchat/akka-2.g8/.gitignore",
+		"/Users/ivan/src/java/NettyExtension/test.sh",
+		"/usr/local/Cellar/rbenv/0.3.0/bin/ruby-local-exec",
+		"/usr/local/Cellar/rbenv/0.3.0/bin/rbenv",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/backchat/templates/default/logback.xml.erb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/environments/production.rb",
+		"/Users/ivan/projects/mojolly/chef-cookbooks/cookbooks/backchat/templates/default/monit.erb",
+		"/private/tmp/cedar/project/build.sbt",
+		"/private/tmp/cedar/project/build.properties",
+		"/private/tmp/actortest/src/main/resources/common.conf",
+		"/private/tmp/actortest/src/main/resources/application.conf",
+		"/Users/ivan/projects/backchat/backend/web/src/test/scala/backchat/web/api/tests/ChannelApiParamsSpec.scala",
+		"/private/tmp/test1.scala",
+		"/Users/ivan/projects/backchat/rl/src/main/scala/rl/Uri.scala",
+		"/Users/ivan/projects/backchat/backend/web/api/src/main/scala/backchat/web/api/GraphApp.scala",
+		"/Users/ivan/projects/backchat/backend/kernel/src/main/scala/backchat/kernel/Kernel.scala",
+		"/Users/ivan/projects/backchat/backend/web/api/src/main/scala/backchat/web/api/StreamsApp.scala",
+		"/Users/ivan/projects/backchat/backend/web/common/src/main/scala/backchat/app/StreamsAppHandler.scala",
+		"/Users/ivan/projects/backchat/backend/backend/api/src/main/scala/backchat/api/AccountApiService.scala",
+		"/Users/ivan/projects/backchat/backend/common/core/src/main/scala/backchat/UriContextService.scala",
+		"/Users/ivan/projects/backchat/backend/common/core/src/main/scala/backchat/http/HttpClient.scala",
+		"/Users/ivan/projects/backchat/backend/common/models/src/main/scala/backchat/service/UriContextService.scala",
+		"/Users/ivan/projects/backchat/backend/project/plugins.sbt",
+		"/Users/ivan/src/scala/spray/project/SprayBuild.scala",
+		"/Users/ivan/src/scala/spray/project/Dependencies.scala",
+		"/Users/ivan/src/scala/spray/spray-base/src/main/scala/cc/spray/http/package.scala",
+		"/Users/ivan/src/scala/akka/akka-docs/scala/zeromq.rst",
+		"/Users/ivan/Library/Application Support/Sublime Text 2/Packages/User/Base File.sublime-settings",
+		"/Users/ivan/.oh-my-zsh/plugins/github/github.plugin.zsh",
+		"/Users/ivan/.sbt/0.11.0/user.sbt",
+		"/Users/ivan/projects/backchat/gen-idea",
+		"/Users/ivan/projects/backchat/scala-inflector/build.sbt",
+		"/Users/ivan/projects/backchat/library/.idea/modules.xml",
+		"/Users/ivan/projects/backchat/.idea/modules.xml",
+		"/Users/ivan/projects/backchat/backend/.idea/modules.xml",
+		"/Users/ivan/projects/backchat/rl/.idea/modules.xml",
+		"/Users/ivan/projects/backchat/logback-akka/.idea/modules.xml",
+		"/Users/ivan/projects/mojolly/backchat-backend/web/gui/src/main/scala/backchat/web/frontend/Auth.scala",
+		"/Users/ivan/projects/mojolly/backchat-backend/web/common/src/main/scala/backchat/web/BackchatBaseApp.scala",
+		"/Users/ivan/projects/mojolly/backchat-backend/web/common/src/main/scala/backchat/app/MessageChannelAppHandler.scala",
+		"/Users/ivan/projects/mojolly/backchat-backend/web/api/src/main/scala/backchat/web/api/AccountApp.scala",
+		"/Users/ivan/projects/mojolly/backchat-backend/kernel/src/main/scala/backchat/kernel/Kernel.scala",
+		"/Users/ivan/projects/mojolly/backchat-backend/common/models/src/main/scala/backchat/model/oauth/OAuth2Util.scala",
+		"/Users/ivan/projects/mojolly/backchat-backend/common/models/src/main/scala/backchat/model/migrations/MoveFilterToProperty.scala",
+		"/Users/ivan/projects/mojolly/backchat-backend/common/core/src/test/scala/BackchatSpecification.scala",
+		"/Users/ivan/projects/mojolly/backchat-backend/project/BackendBuild.scala",
+		"/Users/ivan/projects/mojolly/backchat-backend/backend/tracker/src/main/scala/backchat/tracker/TwitterTracker.scala",
+		"/Users/ivan/projects/mojolly/backchat-backend/common/core/src/main/scala/backchat/Config.scala",
+		"/Users/ivan/projects/mojolly/backchat-backend/project/plugins.sbt",
+		"/Users/ivan/projects/mojolly/backchat-backend/common/core/src/main/scala/backchat/messages/MessagesForSearch.scala",
+		"/Users/ivan/projects/mojolly/backchat-backend/backend/stream/src/main/scala/backchat/stream/FilteredStream.scala",
+		"/Users/ivan/projects/mojolly/backchat-backend/backend/indexer/src/main/scala/backchat/indexer/ElasticSearchServerClient.scala",
+		"/Users/ivan/projects/mojolly/backchat-backend/backend/indexer/src/main/scala/backchat/indexer/ElasticSearchClient.scala",
+		"/Users/ivan/projects/mojolly/backchat-backend/backend/tracker/src/main/scala/backchat/push/TopicTracker.scala",
+		"/Users/ivan/projects/mojolly/backchat-backend/backend/tracker/src/main/scala/backchat/tracker/HashBlueService.scala",
+		"/Users/ivan/projects/mojolly/backchat-backend/backend/stream/src/main/scala/backchat/stream/Boot.scala",
+		"/Users/ivan/projects/mojolly/backchat-backend/scripts/prep-java-7",
+		"/Users/ivan/projects/mojolly/backchat-backend/kernel/src/main/scala/backchat/kernel/BackchatAppEnv.scala",
+		"/Users/ivan/projects/mojolly/backchat-backend/kernel/src/main/scala/backchat/kernel/KeepAlive.scala",
+		"/Users/ivan/projects/mojolly/backchat-backend/scripts/gen-idea",
+		"/Users/ivan/projects/mojolly/backchat-backend/common/core/src/main/resources/application.conf",
+		"/Users/ivan/projects/mojolly/backchat-backend/scripts/migrate-issues",
+		"/Users/ivan/projects/mojolly/backchat-backend/scripts/gen-deb.sh"
+	],
+	"find":
+	{
+		"height": 33.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+			""
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"dist",
+			"ensime/dist",
+			"graphite",
+			"\"",
+			"jenkins",
+			"]\"",
+			"\ncookbook_file \"/etc/ssl/certs/api.backchat.io.combined.crt\" do\n  action :create_if_missing\n  source \"api.backchat.io.combined.crt\"\n  owner \"root\"\n  group \"ssl-cert\"\n  mode 0644\nend\n",
+			"include.*java",
+			"jce_extensions",
+			"$",
+			".*\\[info\\].",
+			"Dns",
+			"X509TrustManager",
+			">",
+			"\"backend\"",
+			"384",
+			"-384",
+			"-Xms384m ",
+			"\")",
+			"log-",
+			" ",
+			"backchat",
+			" ",
+			"jar",
+			"\"]",
+			"\"",
+			"git (",
+			"git",
+			"protobuf",
+			"jruby",
+			"project",
+			"scalate",
+			"dispatch.",
+			"BC_HOME",
+			"ES_",
+			"EC_",
+			"elasticsearch",
+			"ES_USER",
+			"EC_USER",
+			"es_parms",
+			"es_params",
+			"foreground",
+			"BC_HOME",
+			"ES",
+			"ELASTICSEARCH",
+			"elasticsearch",
+			"report_to_graphite",
+			"elasticsearch::report_to_graphite",
+			"remote_s3",
+			"8843",
+			"node.cloud",
+			"make ",
+			"gecode",
+			"./configure",
+			"each_with_index",
+			"variables(",
+			"app_servers",
+			"on started",
+			"template \"/etc/init/haproxy.conf\" do\n  source \"haproxy.upstart\"\n  owner \"root\"\n  group \"root\"\n  mode 0644\nend\n",
+			"node.recipe",
+			"node.run_list",
+			"node.run_list.recipe",
+			"node.run_list.recipes",
+			"Upstart",
+			"node.elasticsearch.gateway.",
+			"@gateway[:",
+			"name",
+			"<=>",
+			"search(",
+			"search(:node",
+			"search(:nodes",
+			"search",
+			"stats",
+			"['stats",
+			"node['stats",
+			"node[:stats",
+			"search",
+			"node.search",
+			"node.recipes",
+			"node.run_list",
+			"notify",
+			"make",
+			"make-",
+			"apt_repository",
+			":sync",
+			"git",
+			"git_repository",
+			"apt_repository",
+			"id",
+			"activation",
+			"mail",
+			"ScalatraServlet",
+			"lift",
+			"elastic",
+			"uax_url_email",
+			"statsHttpPort",
+			"192.168.56.20",
+			"bql",
+			"backchat",
+			"backchat(",
+			"isBackchatSnapshot"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"backchatio_marketing",
+			"elasticsearch",
+			"",
+			":",
+			"BACKCHAT_HOME",
+			"BC_",
+			"backchat",
+			"BC_USER",
+			"bc_params",
+			"daemon",
+			"BACKCHAT_HOME",
+			"BC",
+			"BACKCHAT",
+			"backchat",
+			"node[:elasticsearch][:gateway][:",
+			"node.elasticsearch.gateway.",
+			"mojollyLibrary(",
+			"isLibrarySnapshot"
+		],
+		"reverse": true,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 0.0
+	},
+	"input":
+	{
+		"height": 27.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.ensime_messages":
+	{
+		"height": 0.0
+	},
+	"output.ensime_server":
+	{
+		"height": 341.0
+	},
+	"replace":
+	{
+		"height": 62.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+			[
+				"l",
+				"src/main/scala/io/backchat/scapulet/Logging.scala"
+			],
+			[
+				"sas",
+				"src/main/scala/io/backchat/scapulet/SASLAuthentication.scala"
+			],
+			[
+				"logg",
+				"src/main/scala/io/backchat/scapulet/Logging.scala"
+			],
+			[
+				"logging",
+				"src/main/scala/io/backchat/scapulet/Logging.scala"
+			],
+			[
+				"haprox",
+				"cookbooks/haproxy/templates/default/haproxy-default.erb"
+			],
+			[
+				"bui",
+				"build.sbt"
+			],
+			[
+				"backendbu",
+				"project/BackendBuild.scala"
+			],
+			[
+				"",
+				"kernel/src/main/resources/application.conf"
+			],
+			[
+				"backchatus",
+				"common/core/src/main/scala/backchat/BackchatUser.scala"
+			],
+			[
+				"backchatu",
+				"common/core/src/main/scala/backchat/BackchatUri.scala"
+			],
+			[
+				"webap",
+				"web/src/main/scala/backchat/WebApi.scala"
+			],
+			[
+				"messagestream",
+				"backend/common/models/src/test/scala/backchat/model/tests/MessageStreamSpec.scala"
+			],
+			[
+				"twittert",
+				"backend/tracker/src/main/scala/backchat/tracker/TwitterTracker.scala"
+			],
+			[
+				"hashblu",
+				"backend/tracker/src/main/scala/backchat/tracker/HashBlueService.scala"
+			],
+			[
+				"topict",
+				"backend/tracker/src/main/scala/backchat/push/TopicTracker.scala"
+			],
+			[
+				"boot",
+				"backend/stream/src/main/scala/backchat/stream/Boot.scala"
+			],
+			[
+				"filtereds",
+				"backend/stream/src/main/scala/backchat/stream/FilteredStream.scala"
+			],
+			[
+				"messagesf",
+				"common/core/src/main/scala/backchat/messages/MessagesForSearch.scala"
+			],
+			[
+				"elasticsearchs",
+				"backend/indexer/src/main/scala/backchat/indexer/ElasticSearchServerClient.scala"
+			],
+			[
+				"elasticsearchcl",
+				"backend/indexer/src/main/scala/backchat/indexer/ElasticSearchClient.scala"
+			],
+			[
+				"boo",
+				"stream/src/main/scala/backchat/stream/Boot.scala"
+			],
+			[
+				"streamser",
+				"stream/src/main/scala/backchat/stream/actor/StreamService.scala"
+			],
+			[
+				"backchatlo",
+				"core/src/main/scala/backchat/BackchatLoader.scala"
+			],
+			[
+				"modelspec",
+				"mongo/src/test/scala/backchat/model/tests/ModelSpecBase.scala"
+			],
+			[
+				"twittero",
+				"mongo/src/main/scala/backchat/model/TwitterOAuthUtil.scala"
+			],
+			[
+				"backenr",
+				"core/src/main/scala/backchat/redis/BackendRedis.scala"
+			],
+			[
+				"backchatwe",
+				"web/src/main/scala/backchat/web/BackchatWebServer.scala"
+			],
+			[
+				"backchatw",
+				"web/src/main/scala/backchat/web/BackchatWebServer.scala"
+			],
+			[
+				"log",
+				"core/src/main/resources/logback.xml"
+			],
+			[
+				"logba",
+				"web/src/main/resources/logback.xml"
+			],
+			[
+				"applic",
+				"deploy/application.rb"
+			],
+			[
+				"channelss",
+				"web/src/test/scala/com/mojolly/backchat/web/frontend/tests/ChannelsSpec.scala"
+			],
+			[
+				"build",
+				"project/build.scala"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"show_minimap": true,
+	"show_open_files": true,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 221.0,
+	"status_bar_visible": true
+}
